@@ -4,28 +4,45 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, AccessControl {
+contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
     using Counters for Counters.Counter;
 
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     Counters.Counter private _tokenIdCounter;
 
-    constructor() ERC721("Certificate", "CERT") {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(MINTER_ROLE, msg.sender);
-    }
+    event TokenMinted(uint256 indexed tokenId, string tokenURI);
 
-    function safeMint(address to, string memory uri) public onlyRole(MINTER_ROLE) {
+    constructor() ERC721("Certificate", "CERT") {}
+
+    //TODO: renderla chiamabile solo da Eagle.sol
+    function safeMint(string memory uri) public returns (uint256) {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
-        _safeMint(to, tokenId);
+        _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, uri);
+
+        emit TokenMinted(tokenId, uri);
+        return tokenId;
     }
 
-    // The following functions are overrides required by Solidity.
+    //TODO: spostarla in Eagle.sol
+    function getTokensOwnedByMe() public view returns (uint256[] memory) {
+        uint256 numberOfExistingTokens = _tokenIdCounter.current();
+        uint256 numberOfTokensOwned = balanceOf(msg.sender);
+        uint256[] memory ownedTokenIds = new uint256[](numberOfTokensOwned);
+        
+        uint256 currentIndex = 0;
+        for (uint256 i = 0; i < numberOfExistingTokens; i++) {
+            uint256 tokenId = i;
+            if (ownerOf(tokenId) != msg.sender) continue;
+            ownedTokenIds[currentIndex] = tokenId;
+            currentIndex += 1;
+        }
+
+        return ownedTokenIds;
+    }
 
     function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
@@ -43,7 +60,7 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, AccessControl 
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721URIStorage, AccessControl)
+        override(ERC721, ERC721URIStorage)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
