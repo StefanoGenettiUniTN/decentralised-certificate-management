@@ -47,21 +47,22 @@ app.post('/test-page', upload.single('inFile'), async (req, res) => {
       })
   
       // Send post req to pinata
-      const res = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", data, {
+      const postRes = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", data, {
         maxBodyLength: "Infinity",
         headers: {
             'Content-Type': `multipart/form-data; boundary=${data._boundary}`,
-            Authorization: JWT
+            'pinata_api_key': apiKey,
+            'pinata_secret_api_key': apiSecret
         }
       });
   
-      console.log(res.data);
+      console.log(postRes.data);     
+      res.send("Caricato") 
 
     } catch (error) {
       console.log(error);
-    }
-
-    res.send("caricato")
+      res.send("Errore")
+    }   
 });
   
 
