@@ -76,7 +76,7 @@ contract Eagle {
     }
 
     // Add a team member
-    function addTeamMember(address userWallet) public returns (uint256){
+    function addTeamMember(address userWallet, int userRole) public returns (uint256){
         if(userAddressToUserId[userWallet]!=0){ //the user has been already inserted into the system
             return userAddressToUserId[userWallet];
         }
@@ -84,6 +84,7 @@ contract Eagle {
         uint256 userId = _userItemId.current();
         userAddressToUserId[userWallet] = userId;
         userIdToUserAddress[userId]=userWallet;
+        userAddressToRole[userWallet] = Role(userRole);
         return userId;
     }
 
