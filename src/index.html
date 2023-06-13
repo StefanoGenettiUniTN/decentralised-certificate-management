@@ -7,6 +7,21 @@
 
     <title>NFT sample program</title>
 
+    <style>
+      #spinnerwrapper {
+        background-color: #FFF; 
+        position: absolute; 
+        top: 5;
+        left: 0; 
+        width: 100%; 
+        height: 100%; 
+        z-index: 9999; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        transition: display 0.2s;
+    }
+    </style>
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
@@ -22,6 +37,13 @@
       $(document).ready(function(){
         $(window).load(function() {
           App.init();
+        });
+        $("#mainContent").on('DOMSubtreeModified', function(){
+          console.log("Changed");
+          $('#spinnerwrapper').show();
+          setTimeout(() => {
+            $('#spinnerwrapper').hide();
+          }, 1000);
         });
       });
     </script>
@@ -49,6 +71,13 @@
     </nav>
 
     <div class="container-fluid", style="padding-top: 70px;">
+      <div id="spinnerwrapper">
+        <div class="d-flex flex-column align-items-center justify-content-center">
+          <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+          <strong>Loading...</strong>
+        </div>
+        
+      </div>
         <div id="mainContent"></div>
         <div id="errorMsg"></div>
     </div>
