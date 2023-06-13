@@ -68,7 +68,7 @@ App = {
           App.account = accounts[0];
 
           App.initWeb3();
-
+          
           mainContent.innerHTML = `Wallet connected: <span>${App.account}</span>`;
         })
         .catch((error) => {
@@ -154,9 +154,23 @@ App = {
   },
 
   // display profile
-  displayProfile: function(){
+  displayProfile: async function(){
     if(App.account){
-      mainContent.innerHTML = `Welcome back `+App.account+``;
+      let role = "";
+      let instance = await App.contracts.Eagle.deployed()
+      try {
+        let contractRole = await instance.getMemberRole(App.account);
+        if(contractRole === "Team Leader"){
+          role = "You are the <strong>team leader</strong>";
+        } else {
+          role = "You are <b>not</b> the team leader";
+        }
+        console.log(role);console.log(contractRole);
+      } catch(err){
+        console.log("error:");
+        console.log(err);
+      }
+      mainContent.innerHTML = `Welcome back `+App.account+`. `+role;
     }else{
       App.displayConnectMetamask();
     }
@@ -168,6 +182,11 @@ App = {
       mainContent.innerHTML = `
         <label for="memberAddress">Add team member</label><br>
         <input type="text" id="memberAddress" name="memberAddress"><br>
+        <label for="memberRole">What is its role?</label><br>
+        <select id="memberRole" size="2">
+          <option value="0">Team leader</option>
+          <option value="1">Standard</option>
+        </select>
         <button onclick="App.addTeamMember()">Add</button>
         <hr>
         <div id="teamList"></div>
@@ -191,18 +210,42 @@ App = {
   // Add a new team member wallet address
   addTeamMember: function(){
     let userWalletAddress = $("#memberAddress").val();
+    let userRole = $("#memberRole").val();
 
     App.contracts.Eagle.deployed().then(async function(instance){
       EagleInstance = instance;
 
       try {        
-        let result = await EagleInstance.addTeamMember(userWalletAddress, {from: App.account});
+        let result = await EagleInstance.addTeamMember(userWalletAddress, userRole, {from: App.account});
         App.displayTeam();
       }catch(err){
         console.log("error:")
         console.log(err);
       }
 
+    }).catch(function(err){
+      console.log("error:")
+      console.log(err.message);
+    });
+  },
+
+  getMemberRole: function(){
+    let role = "";
+    App.contracts.Eagle.deployed().then(async function(instance){
+      try {
+        let contractRole = await instance.getMemberRole(App.account);
+        if(contractRole === "Team Leader"){
+          role = "You are the <strong>team leader</strong>";
+        } else {
+          role = "You are <b>not</b> the team leader";
+        }
+        console.log(role);
+        return role;
+      } catch(err){
+        console.log("error:");
+        console.log(err);
+      }
+      console.log(contractRole);
     }).catch(function(err){
       console.log("error:")
       console.log(err.message);
