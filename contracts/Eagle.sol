@@ -103,4 +103,12 @@ contract Eagle {
         return teamMemberAddress;
     }
 
+    // Get specific member role
+    function getMemberRole(address userWallet) public view returns (string memory){
+        string memory result = "";
+        Role userRole = userAddressToRole[userWallet];
+        if (Role.TEAM_LEADER == userRole) result = "Team Leader";
+        if (Role.STANDARD == userRole) result = "Standard user";
+        return result;
+    }
 }
