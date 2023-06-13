@@ -227,28 +227,5 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
-  },
-
-  getMemberRole: function(){
-    let role = "";
-    App.contracts.Eagle.deployed().then(async function(instance){
-      try {
-        let contractRole = await instance.getMemberRole(App.account);
-        if(contractRole === "Team Leader"){
-          role = "You are the <strong>team leader</strong>";
-        } else {
-          role = "You are <b>not</b> the team leader";
-        }
-        console.log(role);
-        return role;
-      } catch(err){
-        console.log("error:");
-        console.log(err);
-      }
-      console.log(contractRole);
-    }).catch(function(err){
-      console.log("error:")
-      console.log(err.message);
-    });
   }
 };
