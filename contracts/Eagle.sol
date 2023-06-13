@@ -11,6 +11,8 @@ contract Eagle {
     Counters.Counter private _certificateItemId;
     Counters.Counter private _userItemId;
 
+    enum Role{ TEAM_LEADER, STANDARD}
+
     address private administrator;    
 
     //key: certificate id
@@ -19,6 +21,7 @@ contract Eagle {
 
     mapping(address => uint256) private userAddressToUserId;
     mapping(uint256 => address) private userIdToUserAddress;
+    mapping(address => Role) private userAddressToRole;
 
     // struct representing a certificate
     struct CertificateItem {
