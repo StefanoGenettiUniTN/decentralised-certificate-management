@@ -186,7 +186,7 @@ App = {
         <select id="memberRole" size="2">
           <option value="0">Team leader</option>
           <option value="1">Standard</option>
-        </select>
+        </select><br>
         <button onclick="App.addTeamMember()">Add</button>
         <hr>
         <div id="teamList"></div>
