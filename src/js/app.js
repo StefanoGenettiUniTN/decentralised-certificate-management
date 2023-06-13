@@ -87,12 +87,61 @@ App = {
       App.contracts.Certificate.deployed().then(function(instance){
         certificateInstance = instance;       
         return certificateInstance.getTokensOwnedByMe({from: App.account});
-      }).then(function(result){
+      }).then(async function(result){
         console.log(result);
         mainContent.innerHTML = `
           <br>
-          <p>Ciao</p>
+          <div id="certificateList"></div>
         `;
+        
+        let token_id;
+        let cert_uri;
+        for(cert in result){
+          token_id = parseInt(result[cert]);
+          
+          //for each retrived certificate id we need to read the corresponding uri
+          //to get the data we are interested in
+          cert_uri = await certificateInstance.tokenURI.call(token_id);
+          console.log(cert_uri);
+
+          //JSON parsing
+          $.getJSON(cert_uri, function(result){
+            console.log(result);
+            
+            let name = result.name;
+            let description = result.description;
+            let document = result.document;
+            let category = result.category;
+            let validity = result.validity;
+            let date_achievement = result.date_achievement;
+            let date_expiration = result.date_expiration;
+            let issuing_authority = result.issuing_authority;
+
+            $("#certificateList").append(`
+                <div class="card" style="width: 25rem;">
+                  <img src="images/defaultCertificateIcon.png" class="card-img-top">
+                  <div class="card-body">
+                  <h5 class="card-title">`+name+`</h5>
+                  <p class="card-text">`+description+`</p>
+                  </div>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
+                    <li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>
+                    <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
+                    <li class="list-group-item"><b>category: </b>`+category+`</li>
+                    <li class="list-group-item"><b>validity: </b>`+validity+`</li>
+                  </ul>
+                  <div class="card-body">
+                    <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
+                    <button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>
+                  </div>
+                </div>
+              `);            
+
+          }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
+          //...end JSON parsing
+        }
+
       }).catch(function(err){
         console.log("error:")
         console.log(err.message);
@@ -137,7 +186,7 @@ App = {
         // contains events emitted while processing the transaction.
         var event = certificateInstance.Transfer(function(error, response) {
           if (!error) {
-              console.log(response.args.tokenId.toString())
+              console.log(response.args.tokenId.toString());
           }else{
               console.log(error);
           }
@@ -195,9 +244,31 @@ App = {
     App.contracts.Eagle.deployed().then(async function(instance){
       EagleInstance = instance;
 
+      try {
+        if(confirm("Are you sure to delete the certificate?")){        
+          let result = await EagleInstance.addTeamMember(userWalletAddress, {from: App.account});
+        }
+        App.displayCertificates();
+      }catch(err){
+        console.log("error:")
+        console.log(err);
+      }
+
+    }).catch(function(err){
+      console.log("error:")
+      console.log(err.message);
+    });
+  },
+
+  // Delete NFT
+  deleteNFT: function(tokenId){
+
+    App.contracts.Certificate.deployed().then(async function(instance){
+      CertificateInstance = instance;
+
       try {        
-        let result = await EagleInstance.addTeamMember(userWalletAddress, {from: App.account});
-        App.displayTeam();
+        let result = await CertificateInstance.deleteNFT(tokenId, {from: App.account});
+        App.displayCertificates();
       }catch(err){
         console.log("error:")
         console.log(err);

@@ -36,6 +36,7 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         uint256 currentIndex = 0;
         for (uint256 i = 0; i < numberOfExistingTokens; i++) {
             uint256 tokenId = i;
+            if(!_exists(tokenId)) continue; //TODO: risolvere in altro modo
             if (ownerOf(tokenId) != msg.sender) continue;
             ownedTokenIds[currentIndex] = tokenId;
             currentIndex += 1;
@@ -46,6 +47,11 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
 
     function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
+    }
+
+    //TODO: possibile spostarla in Eagle.sol? (Non credo)
+    function deleteNFT(uint256 tokenId) public {
+        _burn(tokenId);
     }
 
     function tokenURI(uint256 tokenId)
