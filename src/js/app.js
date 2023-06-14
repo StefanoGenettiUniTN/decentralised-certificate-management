@@ -7,6 +7,7 @@ App = {
     console.log("Initialization function")
     if(App.account){
       mainContent.innerHTML = `Wallet connected: <span>${App.account}</span>`;
+      accountaddress.innerHTML = `<span>${App.account}</span>`
     }else{
       App.displayConnectMetamask();
     }
@@ -70,6 +71,7 @@ App = {
           App.initWeb3();
           
           mainContent.innerHTML = `Wallet connected: <span>${App.account}</span>`;
+          accountaddress.innerHTML = `<span>${App.account}</span>`
         })
         .catch((error) => {
           console.log(error, error.code);
