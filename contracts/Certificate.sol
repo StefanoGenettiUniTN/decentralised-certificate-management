@@ -9,19 +9,68 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
     using Counters for Counters.Counter;
-
     Counters.Counter private _tokenIdCounter;
 
+    // struct representing certificate information
+    struct CertificateItem {
+        uint256 creationDate;       // timestamp which indicates when the certificate has been created
+        uint256 exparationDate;     // timestamp which indicates when the certificate will e no longer valid
+        bool isNonExpiring;         // isNonExpiring=true -> the certificate has not an exparation Date
+        address creator;            // address of the creator of the nft
+        bool isValid;               // default: true -> mark the validity of the certificate
+    }
+
+    // mapping tokenId -> CertificateItem
+    mapping(uint256 => CertificateItem) private mintedCertificates;
+
+    /**=============EVENTS=============*/
+
+    // this event is emitted when a NFT is minted
     event TokenMinted(uint256 indexed tokenId, string tokenURI);
+
+    // this event is emitted when a certificate is added to mintedCertificates map
+    event CertificateItemCreated(
+        uint256 creationDate,
+        uint256 exparationDate,
+        bool isNonExpiring,
+        address creator,
+        bool isValid
+    );
+    /**================================*/
 
     constructor() ERC721("Certificate", "CERT") {}
 
-    //TODO: renderla chiamabile solo da Eagle.sol
-    function safeMint(string memory uri) public returns (uint256) {
+    function safeMint(
+                string memory uri,
+                uint256 _exparationDate,
+                bool _isNonExpiring
+            ) public returns (uint256) {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, uri);
+
+        uint256 creationDate = block.timestamp;
+        bool _isValid = true;
+        bool isNonExpiring = _isNonExpiring;
+        uint256 exparationDate = (isNonExpiring) ? 0 : _exparationDate;
+        address creator = msg.sender;
+
+        mintedCertificates[tokenId] = CertificateItem(
+            creationDate,
+            exparationDate,
+            isNonExpiring,
+            creator,
+            _isValid
+        );
+
+        emit CertificateItemCreated(
+            creationDate,
+            exparationDate,
+            isNonExpiring,
+            creator,
+            _isValid
+        );
 
         emit TokenMinted(tokenId, uri);
         return tokenId;
@@ -36,7 +85,7 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         uint256 currentIndex = 0;
         for (uint256 i = 0; i < numberOfExistingTokens; i++) {
             uint256 tokenId = i;
-            if(!_exists(tokenId)) continue; //TODO: risolvere in altro modo
+            if(!_exists(tokenId)) continue; // the token does not exist anymore //TODO: risolvere in altro modo
             if (ownerOf(tokenId) != msg.sender) continue;
             ownedTokenIds[currentIndex] = tokenId;
             currentIndex += 1;
@@ -70,5 +119,35 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    // check token validity given token id
+    function tokenIsValid(uint256 tokenId) public view returns (bool) {
+        CertificateItem storage cert_obj = mintedCertificates[tokenId]; // assign reference
+
+        // if the certificates has an expiration date
+        // and it is expired, then set certificate
+        // validity to false
+        if (cert_obj.isNonExpiring) return true;
+        uint256 currentTimestamp = block.timestamp;
+        //  cert_obj.isValid = cert_obj.isValid && (cert_obj.exparationDate>currentTimestamp);  // TODO: riflettere come impostare il certificato not valid dopo un po' qui non posso modificare lo stato
+        return cert_obj.isValid && (cert_obj.exparationDate>currentTimestamp);
+    }
+
+    function getExpirationDate(uint256 tokenId) public view returns (uint256){
+        CertificateItem memory cert_obj = mintedCertificates[tokenId];
+        return cert_obj.isNonExpiring ? 0 : cert_obj.exparationDate;
+    }
+
+    //debug
+    function getBlockTimestamp() public view returns (uint256){
+        return block.timestamp;
+    }
+
+    //debug
+    function getCondition(uint256 tokenId) public view returns (bool){
+        CertificateItem memory cert_obj = mintedCertificates[tokenId];
+        uint256 currentTimestamp = block.timestamp;
+        return (cert_obj.exparationDate>currentTimestamp);
     }
 }
