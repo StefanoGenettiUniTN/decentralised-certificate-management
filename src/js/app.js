@@ -15,7 +15,7 @@ App = {
 
   //If the user is not logged with the wallet, display connect to Metamask button
   displayConnectMetamask: function(){
-    mainContent.innerHTML = '<button class="button" id="connectButton" onclick="App.connectMetamask()">Connect wallet</button>';
+    mainContent.innerHTML = 'Welcome to our application.<br>Here you will be able to manage your team certification thanks to a simple solution.<br>Please, connect your <strong>Metamask wallet</strong> thanks to the button below. In this way you will be able to use our solution!<br><button class="button" id="connectButton" onclick="App.connectMetamask()">Connect wallet</button>';
   },
 
   initWeb3: async function() {
@@ -70,7 +70,7 @@ App = {
 
           App.initWeb3();
           
-          mainContent.innerHTML = `Wallet connected: <span>${App.account}</span>`;
+          mainContent.innerHTML = `Excellent! You have connected you wallet successfully!<br>Wallet connected: <span>${App.account}</span><br>Now you can manage your team cerfiticates in an easier way!<br>You have some options to choose:<ul><li>With <strong>Profile</strong> you will be able to check your account in the team ecosystem</li><li>With <strong>My certificates</strong> you can take a look to the certificates you have uploaded</li><li>With <strong>Upload certificate</strong> you can upload your certificates in the system</li><li>With <strong>Team</strong> you can take a look to the Team composition and you can add other members to your team</li></ul>`;
           accountaddress.innerHTML = `<span>${App.account}</span>`
         })
         .catch((error) => {
