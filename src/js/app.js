@@ -343,6 +343,9 @@ App = {
 
   // Set the NFT as valid
   validateNFT: function(tokenId){
+
+    console.log("validate "+tokenId);
+
     App.contracts.Certificate.deployed().then(async function(instance){
       CertificateInstance = instance;
 
