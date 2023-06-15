@@ -15,6 +15,7 @@ App = {
   //If the user is not logged with the wallet, display connect to Metamask button
   displayConnectMetamask: function(){
     mainContent.innerHTML = '<button class="button" id="connectButton" onclick="App.connectMetamask()">Connect wallet</button>';
+    accountaddress.innerHTML = '';
   },
 
   initWeb3: async function() {
@@ -34,7 +35,7 @@ App = {
     }
   },
 
-  initContracts: function() {
+  initContracts: async function() {
     //Certificate smart contract
     $.getJSON("Certificate.json", function(data){
       //Get the necessary contract artifact file and instantiate it with @truffle/contract
@@ -64,12 +65,13 @@ App = {
   connectMetamask: function(){
     if (typeof window.ethereum !== "undefined") {
       ethereum.request({ method: "eth_requestAccounts" })
-        .then((accounts) => {
+        .then(async (accounts) => {
           App.account = accounts[0];
 
           App.initWeb3();
           
           mainContent.innerHTML = `Wallet connected: <span>${App.account}</span>`;
+          accountaddress.innerHTML = `<ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="#"><span class="material-symbols-outlined">account_circle</span><span">${App.account}</span></a></li></ul><button type="button" class="btn btn-danger position-relative" onclick="App.disconnectMetamask();">Logout</button>`
         })
         .catch((error) => {
           console.log(error, error.code);
@@ -234,7 +236,6 @@ App = {
         } else {
           role = "You are <b>not</b> the team leader";
         }
-        console.log(role);console.log(contractRole);
       } catch(err){
         console.log("error:");
         console.log(err);
@@ -363,5 +364,14 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+  },
+
+  // disconnect Metamask wallet
+  disconnectMetamask: async function(){
+    if(App.account){
+      window.localStorage.clear();
+      App.account = null;
+      App.displayConnectMetamask();
+    }
   }
 };
