@@ -99,6 +99,8 @@ App = {
         for(cert in result){
           token_id = parseInt(result[cert]);
           
+          console.log("token_id: "+token_id);
+
           // for each retrived certificate id we need to read the corresponding uri
           // to get the data we are interested in
           cert_uri = await certificateInstance.tokenURI.call(token_id);
@@ -107,10 +109,10 @@ App = {
           // for each retrived certificate id we need to
           // check whether or not it is still valid
           cert_valid = await certificateInstance.tokenIsValid.call(token_id);
-          console.log(cert_valid);
+          console.log("valid: "+cert_valid);
 
           //JSON parsing
-          $.getJSON(cert_uri, function(result){
+          await $.getJSON(cert_uri, function(result){
             console.log(result);
             
             let name = result.name;
@@ -138,7 +140,8 @@ App = {
                   <div class="card-body">
                     <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
                     <button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>
-                    <button class="btn btn-warning">Invalidate</button>
+                    <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`')">Invalidate</button>
+                    <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`')">Set valid</button>
                   </div>
                 </div>
               `);            
@@ -261,10 +264,8 @@ App = {
     App.contracts.Eagle.deployed().then(async function(instance){
       EagleInstance = instance;
 
-      try {
-        if(confirm("Are you sure to delete the certificate?")){        
-          let result = await EagleInstance.addTeamMember(userWalletAddress, {from: App.account});
-        }
+      try {        
+        let result = await EagleInstance.addTeamMember(userWalletAddress, {from: App.account});
         App.displayCertificates();
       }catch(err){
         console.log("error:")
@@ -283,8 +284,52 @@ App = {
     App.contracts.Certificate.deployed().then(async function(instance){
       CertificateInstance = instance;
 
-      try {        
-        let result = await CertificateInstance.deleteNFT(tokenId, {from: App.account});
+      try {
+        if(confirm("Are you sure to delete the certificate?")){        
+          let result = await CertificateInstance.deleteNFT(tokenId, {from: App.account});
+        }
+        App.displayCertificates();
+      }catch(err){
+        console.log("error:")
+        console.log(err);
+      }
+
+    }).catch(function(err){
+      console.log("error:")
+      console.log(err.message);
+    });
+  },
+
+  // Invalidate NFT
+  invalidateNFT: function(tokenId){
+    App.contracts.Certificate.deployed().then(async function(instance){
+      CertificateInstance = instance;
+
+      try {
+        if(confirm("Are you sure to set the certificate not valid?")){        
+          let result = await CertificateInstance.setCertificateNotValid(tokenId, {from: App.account});
+        }
+        App.displayCertificates();
+      }catch(err){
+        console.log("error:")
+        console.log(err);
+      }
+
+    }).catch(function(err){
+      console.log("error:")
+      console.log(err.message);
+    });
+  },
+
+  // Set the NFT as valid
+  validateNFT: function(tokenId){
+    App.contracts.Certificate.deployed().then(async function(instance){
+      CertificateInstance = instance;
+
+      try {
+        if(confirm("Are you sure to set the certificate valid?")){        
+          let result = await CertificateInstance.setCertificateValid(tokenId, {from: App.account});
+        }
         App.displayCertificates();
       }catch(err){
         console.log("error:")

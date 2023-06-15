@@ -125,13 +125,16 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
     function tokenIsValid(uint256 tokenId) public view returns (bool) {
         CertificateItem storage cert_obj = mintedCertificates[tokenId]; // assign reference
 
+        // the token is not valid
+        if (cert_obj.isValid==false) return false;
+
         // if the certificates has an expiration date
         // and it is expired, then set certificate
         // validity to false
         if (cert_obj.isNonExpiring) return true;
         uint256 currentTimestamp = block.timestamp;
         //  cert_obj.isValid = cert_obj.isValid && (cert_obj.exparationDate>currentTimestamp);  // TODO: riflettere come impostare il certificato not valid dopo un po' qui non posso modificare lo stato
-        return cert_obj.isValid && (cert_obj.exparationDate>currentTimestamp);
+        return (cert_obj.exparationDate>currentTimestamp);
     }
 
     function getExpirationDate(uint256 tokenId) public view returns (uint256){
@@ -139,15 +142,19 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         return cert_obj.isNonExpiring ? 0 : cert_obj.exparationDate;
     }
 
-    //debug
-    function getBlockTimestamp() public view returns (uint256){
-        return block.timestamp;
+    // set to false the validity of the certificate specified as
+    // input parameter
+    function setCertificateNotValid(uint256 tokenId) public{    // TODO: pensare cosa succede se il certificato con l'ID che viene passato non esiste
+                                                                // TODO: renderla chiamabile solo dai certificati dei clienti
+        CertificateItem storage cert_obj = mintedCertificates[tokenId];
+        cert_obj.isValid = false;        
     }
 
-    //debug
-    function getCondition(uint256 tokenId) public view returns (bool){
-        CertificateItem memory cert_obj = mintedCertificates[tokenId];
-        uint256 currentTimestamp = block.timestamp;
-        return (cert_obj.exparationDate>currentTimestamp);
+    // set to true the validity of the certificate specified as
+    // input parameter
+    function setCertificateValid(uint256 tokenId) public{       // TODO: pensare cosa succede se il certificato con l'ID che viene passato non esiste
+                                                                // TODO: renderla chiamabile solo dai certificati dei clienti
+        CertificateItem storage cert_obj = mintedCertificates[tokenId];
+        cert_obj.isValid = true;        
     }
 }
