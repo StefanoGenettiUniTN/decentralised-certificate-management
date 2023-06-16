@@ -6,7 +6,28 @@ App = {
   init: function() {
     console.log("Initialization function")
     if(App.account){
-      mainContent.innerHTML = `Wallet connected: <span>${App.account}</span>`;
+      mainContent.innerHTML = `
+            <div class="jumbotron">
+              <h1 class="display-4">Decentralised certificate managament</h1>
+              <p class="lead">This is the minimum value product of our service. Any feedback is more than welcome!</p>
+              <p class="lead"><i>Eros Ribaga, Stefano Genetti, Pietro Fronza</i></p>
+              <hr class="my-4">
+              <p class="lead">
+                <div class="alert alert-success" role="alert" style="width: 30rem;">
+                  Wallet successfully connected!
+                </div>
+                <p><b>Wallet address:</b> ${App.account}</p>
+                <p>Explore the content of the DApp using the navigation bar. For any doubt, do not esitate to contact us!</p>
+                <div class="card" style="width: 30rem;">
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@student.unitn.it</li>
+                    <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@student.unitn.it</li>
+                    <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@student.unitn.it</li>
+                  </ul>
+                </div>
+              </p>
+            </div>
+          `;
     }else{
       App.displayConnectMetamask();
     }
@@ -14,7 +35,18 @@ App = {
 
   //If the user is not logged with the wallet, display connect to Metamask button
   displayConnectMetamask: function(){
-    mainContent.innerHTML = '<button class="button" id="connectButton" onclick="App.connectMetamask()">Connect wallet</button>';
+    mainContent.innerHTML = `
+      <div class="jumbotron">
+        <h1 class="display-4">Decentralised certificate managament</h1>
+        <p class="lead">This is the minimum value product of our service. Any feedback is more than welcome!</p>
+        <p class="lead"><i>Eros Ribaga, Stefano Genetti, Pietro Fronza</i></p>
+        <hr class="my-4">
+        <p>In order to use our service, a <b>Metamask</b> wallet is required. If you do not have a Metamask wallet, please refer to the <a href="https://metamask.io/" target="_blank">offical website</a>.</p>
+        <p class="lead">
+          <button type="button" class="btn btn-primary btn-lg text-center" id="connectButton" onclick="App.connectMetamask()"><img class="mb-2 mr-2" src="images/metamask.png" style="width: 50px;"/>Connect wallet</button>
+        </p>
+      </div>
+    `;
   },
 
   initWeb3: async function() {
@@ -69,7 +101,28 @@ App = {
 
           App.initWeb3();
           
-          mainContent.innerHTML = `Wallet connected: <span>${App.account}</span>`;
+          mainContent.innerHTML = `
+            <div class="jumbotron">
+              <h1 class="display-4">Decentralised certificate managament</h1>
+              <p class="lead">This is the minimum value product of our service. Any feedback is more than welcome!</p>
+              <p class="lead"><i>Eros Ribaga, Stefano Genetti, Pietro Fronza</i></p>
+              <hr class="my-4">
+              <p class="lead">
+                <div class="alert alert-success" role="alert" style="width: 30rem;">
+                  Wallet successfully connected!
+                </div>
+                <p><b>Wallet address:</b> ${App.account}</p>
+                <p>Explore the content of the DApp using the navigation bar. For any doubt, do not esitate to contact us!</p>
+                <div class="card" style="width: 30rem;">
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@student.unitn.it</li>
+                    <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@student.unitn.it</li>
+                    <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@student.unitn.it</li>
+                  </ul>
+                </div>
+              </p>
+            </div>
+          `;
         })
         .catch((error) => {
           console.log(error, error.code);
@@ -406,9 +459,6 @@ App = {
               <li class="list-group-item"><b>wallet address: </b>`+App.account+`</li>
               <li class="list-group-item"><b>role: </b>`+role+`</li>
             </ul>
-            <div class="card-body">
-              <a href="#" class="btn btn-danger">Logout</a>
-            </div>
           </div>
         </div>
         <div class="row">
