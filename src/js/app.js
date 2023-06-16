@@ -5,11 +5,13 @@ App = {
 
   init: function() {
     console.log("Initialization function")
+    App.showSpinner();
     if(App.account){
       mainContent.innerHTML = `Wallet connected: <span>${App.account}</span>`;
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   //If the user is not logged with the wallet, display connect to Metamask button
@@ -63,6 +65,7 @@ App = {
 
   //The user clicks on Connect wallet
   connectMetamask: function(){
+    App.showSpinner();
     if (typeof window.ethereum !== "undefined") {
       ethereum.request({ method: "eth_requestAccounts" })
         .then(async (accounts) => {
@@ -81,10 +84,12 @@ App = {
       //window.open("https://metamask.io/download/", "_blank");
       errorMsg.innerHTML = "Please, install metamask";
     }
+    App.hideSpinner();
   },
 
   //List the certificates which is owned by the current user
   displayCertificates: function(){
+    App.showSpinner();
     if(App.account){
       App.contracts.Certificate.deployed().then(function(instance){
         certificateInstance = instance;       
@@ -159,11 +164,13 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // Page: upload certificate
   // load the user interface
   displayUploadCertificateForm: function(){
+    App.showSpinner();
     if(App.account){
       mainContent.innerHTML = `
         <br>
@@ -178,10 +185,12 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // create new certificate
   mintNFT: async function(){
+    App.showSpinner();
     let uri = $("#cert_uri").val();
     let expiration_date = $("#cert_expdate").val();
     let expiration_date_epoch = Math.floor(new Date(expiration_date).getTime() / 1000);
@@ -222,10 +231,12 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
   // display profile
   displayProfile: async function(){
+    App.showSpinner();
     if(App.account){
       let role = "";
       let instance = await App.contracts.Eagle.deployed()
@@ -244,10 +255,12 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // manage team webpage
   displayTeam: async function(){
+    App.showSpinner();
     if(App.account){
       mainContent.innerHTML = `
         <label for="memberAddress">Add team member</label><br>
@@ -275,10 +288,12 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // Add a new team member wallet address
   addTeamMember: function(){
+    App.showSpinner();
     let userWalletAddress = $("#memberAddress").val();
     let userRole = $("#memberRole").val();
 
@@ -297,11 +312,12 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
   // Delete NFT
   deleteNFT: function(tokenId){
-
+    App.showSpinner();
     App.contracts.Certificate.deployed().then(async function(instance){
       CertificateInstance = instance;
 
@@ -319,10 +335,12 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
   // Invalidate NFT
   invalidateNFT: function(tokenId){
+    App.showSpinner();
     App.contracts.Certificate.deployed().then(async function(instance){
       CertificateInstance = instance;
 
@@ -340,10 +358,12 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
   // Set the NFT as valid
   validateNFT: function(tokenId){
+    App.showSpinner();
 
     console.log("validate "+tokenId);
 
@@ -364,14 +384,29 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
   // disconnect Metamask wallet
   disconnectMetamask: async function(){
+    App.showSpinner();
     if(App.account){
       window.localStorage.clear();
       App.account = null;
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
+  },
+
+  // Show loading page
+  showSpinner: function(){
+    spinnerwrapper.style.display = '';
+  },
+
+  // Hide loading page
+  hideSpinner: function(){
+    setTimeout(() => {
+      spinnerwrapper.style.display = 'none';
+    }, 1000);
   }
 };
