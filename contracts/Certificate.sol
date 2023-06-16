@@ -142,6 +142,11 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         return cert_obj.isNonExpiring ? 0 : cert_obj.exparationDate;
     }
 
+    function getCreationDate(uint256 tokenId) public view returns (uint256){
+        CertificateItem memory cert_obj = mintedCertificates[tokenId];
+        return cert_obj.creationDate;
+    }
+
     // set to false the validity of the certificate specified as
     // input parameter
     function setCertificateNotValid(uint256 tokenId) public{    // TODO: pensare cosa succede se il certificato con l'ID che viene passato non esiste

@@ -226,8 +226,11 @@ App = {
   displayProfile: async function(){
     if(App.account){
       let role = "";
+      let account_name= "";
+      
       let instance = await App.contracts.Eagle.deployed()
       try {
+        // get account role
         let contractRole = await instance.getMemberRole(App.account);
         if(contractRole === "Team Leader"){
           role = "You are the <strong>team leader</strong>";
@@ -235,11 +238,223 @@ App = {
           role = "You are <b>not</b> the team leader";
         }
         console.log(role);console.log(contractRole);
+        //...end get account role
       } catch(err){
         console.log("error:");
         console.log(err);
       }
-      mainContent.innerHTML = `Welcome back `+App.account+`. `+role;
+
+      instance = await App.contracts.Certificate.deployed()
+      try {
+        // get certificates
+        let accountCertificates = await instance.getTokensOwnedByMe({from: App.account});
+
+        var expiredCertificates = [];    // certificates whose expiration date is smaller than the current date
+        var mostRecentCertificates = []; // the last updloaded certificates
+
+        for(cert in accountCertificates){
+          let cert_obj = {
+            id: null,
+            valid: null,
+            uri: null,
+            name: null,
+            description: null,
+            document: null,
+            category: null,
+            date_achievement: null,
+            date_expiration: null,
+            issuing_authority: null
+          };
+
+          token_id = parseInt(accountCertificates[cert]);
+          cert_obj.id = token_id;
+          console.log("token_id: "+token_id);
+
+          // for each retrived certificate id we need to
+          // check whether or not it is valid
+          cert_valid = await instance.tokenIsValid.call(token_id);
+          cert_obj.valid = cert_valid;
+          console.log("valid: "+cert_valid);
+          
+          // get the creation date of each retrived
+          // certificate in order to select the
+          // (max 3) most recent certificates
+          cert_creationDate = await instance.getCreationDate.call(token_id);
+          cert_obj.date_achievement = cert_creationDate;
+          console.log("creation date: "+cert_creationDate);
+
+          // get token uri
+          cert_uri = await instance.tokenURI.call(token_id);
+          cert_obj.uri = cert_uri;
+          console.log(cert_uri);
+
+          if(!cert_valid){  // if the certificate is not valid, then add to the expiredCertificates list
+            await $.getJSON(cert_uri, function(result){ //get detailed certificate information              
+              cert_obj.name = result.name;
+              cert_obj.description = result.description;
+              cert_obj.document = result.document;
+              cert_obj.category = result.category;
+              cert_obj.date_expiration= result.date_expiration;
+              cert_obj.issuing_authority = result.issuing_authority;          
+            }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
+
+            expiredCertificates.push(cert_obj);
+          }
+
+          mostRecentCertificates.push(cert_obj);
+        }
+        //...end get certficates
+      } catch(err){
+        console.log("error:");
+        console.log(err);
+      }
+
+      // prepare notification html
+      let html_notification = ``;
+      if(expiredCertificates.length==0){
+        html_notification += `<p>Hurray! All your certificates are valid.</p>`;
+      }else{
+        html_notification += `<p>The following certificates owned by you are expired or not valid:</p>`;
+        html_notification += `<div class="overflow-auto" style="height: 500px; width: 55rem;">`;
+        for(i in expiredCertificates){
+          cert_obj = expiredCertificates[i];
+          html_notification += `
+                <div class="card mb-2" style="width: 50rem;">
+                  <img src="images/defaultCertificateIcon.png" class="card-img-top" style="width: 33%">
+                  <div class="card-body">
+                  <h5 class="card-title">`+cert_obj.name+`</h5>
+                  <p class="card-text">`+cert_obj.description+`</p>
+                  </div>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><b>achievement date: </b>`+cert_obj.date_achievement+`</li>
+                    <li class="list-group-item"><b>expiration date: </b>`+cert_obj.date_expiration+`</li>
+                    <li class="list-group-item"><b>issuing authority: </b>`+cert_obj.issuing_authority+`</li>
+                    <li class="list-group-item"><b>category: </b>`+cert_obj.category+`</li>
+                  </ul>
+                  <div class="card-body">
+                    <a href="`+cert_obj.document+`" class="btn btn-info" target="_blank">Download</a>
+                  </div>
+                </div>
+              `;
+        }
+        html_notification += `</div>`;
+      }
+      //...
+
+      // prepare last updated certificates html
+      let html_lastCertificates = ``;
+      if(mostRecentCertificates.length==0){
+        html_lastCertificates += `<p>You have not uploaded any certificate yet.</p>`;
+      }else{
+        html_lastCertificates += `<p>The following are the last certificates you have uploaded:</p>`;
+        html_lastCertificates += `<div class="overflow-auto" style="height: 500px; width: 55rem;">`;
+
+        mostRecentCertificates.sort(function(a, b) {  // sort certificates by date of achievement
+          return b.date_achievement - a.date_achievement;
+        });
+
+        for(let i = 0; i < Math.min(3, mostRecentCertificates.length); i++){  // get (max 3) most recent certificates
+          cert_obj = mostRecentCertificates[i];
+          if(cert_obj.name == null){ // the detailed information about this certificates have not been retrived from IPFS yet
+            await $.getJSON(cert_obj.uri, function(result){         
+              cert_obj.name = result.name;
+              cert_obj.description = result.description;
+              cert_obj.document = result.document;
+              cert_obj.category = result.category;
+              cert_obj.date_expiration= result.date_expiration;
+              cert_obj.issuing_authority = result.issuing_authority;          
+            }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
+          }
+          html_lastCertificates += `
+                <div class="card mb-2" style="width: 50rem;">
+                  <img src="images/defaultCertificateIcon.png" class="card-img-top" style="width: 33%">
+                  <div class="card-body">
+                  <h5 class="card-title">`+cert_obj.name+`</h5>
+                  <p class="card-text">`+cert_obj.description+`</p>
+                  </div>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><b>achievement date: </b>`+cert_obj.date_achievement+`</li>
+                    <li class="list-group-item"><b>expiration date: </b>`+cert_obj.date_expiration+`</li>
+                    <li class="list-group-item"><b>issuing authority: </b>`+cert_obj.issuing_authority+`</li>
+                    <li class="list-group-item"><b>category: </b>`+cert_obj.category+`</li>
+                  </ul>
+                  <div class="card-body">
+                    <a href="`+cert_obj.document+`" class="btn btn-info" target="_blank">Download</a>
+                  </div>
+                </div>
+              `;
+        }
+        html_lastCertificates += `</div>`;
+      }
+      //...
+
+      // display profile card
+      mainContent.innerHTML = `
+      <div class="container-fluid">
+        <div class="row">
+          <p>---<b> profile section </b>------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          <div class="card" style="width: 50rem;">
+            <div class="card-body">
+              <h5 class="card-title">Welcome back!</h5>
+              <p class="card-text">
+                We're glad to see you back on our system. <br>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item"><b>name: </b>`+account_name+`</li>
+              <li class="list-group-item"><b>wallet address: </b>`+App.account+`</li>
+              <li class="list-group-item"><b>role: </b>`+role+`</li>
+            </ul>
+            <div class="card-body">
+              <a href="#" class="btn btn-danger">Logout</a>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <p>--------------------------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          <p>---<b> notifications </b>------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          `+html_notification+`
+        </div>
+        <div class="row">
+          <p>--------------------------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          <p>---<b> last updated certificates </b>------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          `+html_lastCertificates+`
+        </div>
+        <div class="row">
+          <p>--------------------------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          <p>---<b> ask for support </b>------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          <div class="card" style="width: 50rem;">
+            <div class="card-body">
+              <h5 class="card-title">Contact us</h5>
+              <p class="card-text">
+                Please, refer to the following references to contact us. We are eager to hear your requests!
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@student.unitn.it</li>
+              <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@student.unitn.it</li>
+              <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@student.unitn.it</li>
+            </ul>
+          </div>
+        </div>
+        <div class="row">
+          <p>--------------------------------------------------------------------------------------------------</p>
+        </div>
+      </div>
+      `;
+
     }else{
       App.displayConnectMetamask();
     }
