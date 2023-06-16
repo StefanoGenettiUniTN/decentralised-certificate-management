@@ -231,7 +231,7 @@ App = {
       let instance = await App.contracts.Eagle.deployed()
       try {
         let contractRole = await instance.getMemberRole(App.account);
-        if(contractRole === "Team Leader"){
+        if(contractRole === "TL"){
           role = "You are the <strong>team leader</strong>";
         } else {
           role = "You are <b>not</b> the team leader";
