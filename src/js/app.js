@@ -314,6 +314,7 @@ App = {
             description: null,
             document: null,
             category: null,
+            date_creation: null,
             date_achievement: null,
             date_expiration: null,
             issuing_authority: null
@@ -333,7 +334,7 @@ App = {
           // certificate in order to select the
           // (max 3) most recent certificates
           cert_creationDate = await instance.getCreationDate.call(token_id);
-          cert_obj.date_achievement = cert_creationDate;
+          cert_obj.date_creation = cert_creationDate;
           console.log("creation date: "+cert_creationDate);
 
           // get token uri
@@ -347,6 +348,7 @@ App = {
               cert_obj.description = result.description;
               cert_obj.document = result.document;
               cert_obj.category = result.category;
+              cert_obj.date_achievement = result.date_achievement;
               cert_obj.date_expiration= result.date_expiration;
               cert_obj.issuing_authority = result.issuing_authority;          
             }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
@@ -403,7 +405,7 @@ App = {
         html_lastCertificates += `<div class="overflow-auto" style="height: 500px; width: 55rem;">`;
 
         mostRecentCertificates.sort(function(a, b) {  // sort certificates by date of achievement
-          return b.date_achievement - a.date_achievement;
+          return b.date_creation - a.date_creation;
         });
 
         for(let i = 0; i < Math.min(3, mostRecentCertificates.length); i++){  // get (max 3) most recent certificates
@@ -414,6 +416,7 @@ App = {
               cert_obj.description = result.description;
               cert_obj.document = result.document;
               cert_obj.category = result.category;
+              cert_obj.date_achievement = result.date_achievement;
               cert_obj.date_expiration= result.date_expiration;
               cert_obj.issuing_authority = result.issuing_authority;          
             }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
