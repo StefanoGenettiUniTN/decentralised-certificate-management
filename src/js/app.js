@@ -544,6 +544,214 @@ App = {
     }
   },
 
+  // display list of the available courses
+  displayCourses: function(){
+    if(App.account){
+      mainContent.innerHTML = `
+      <div class="jumbotron">
+        <h2 class="display-4">Courses</h2>
+        <p class="lead">Here is the list of the courses which are available in your organization.</p>
+        <p class="lead">
+          <button type="button" class="btn btn-dark id="addCourseBtn" onclick="App.displayAddNewCourse()">Add course</button>
+        </p>
+        <hr class="my-4">
+      </div>
+      <div class="container-fluid">
+        <p><b>Courses:</b></p>
+        <div class="card" style="width: 30rem;">
+          <div class="card-body">
+            <h5 class="card-title">Corso aggiornamento meccanici</h5>
+            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+          </div>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Date: </b>2020-02-19</li>
+          </ul>
+          <div class="card-body" id="courseControl">
+            <button class="btn btn-success" onclick="App.courseSubscribe()">Subscribe</button>
+            <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
+            <button class="btn btn-danger" onclick="App.courseDelete()">Delete</button>
+          </div>
+        </div>
+      </div>
+      <hr class="my-4">
+      <div class="container-fluid">
+        <p><b>Current subscriptions:</b></p>
+        <div class="card" style="width: 30rem;">
+          <div class="card-body">
+            <h5 class="card-title">Corso aggiornamento meccanici</h5>
+            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+          </div>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Date: </b>2020-02-19</li>
+          </ul>
+          <div class="card-body" id="courseControl">
+            <button class="btn btn-secondary" onclick="App.courseUnsubscribe()">Unsubscribe</button>
+            <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
+            <button class="btn btn-danger" onclick="App.courseDelete()">Delete</button>
+          </div>
+        </div>
+      </div>
+      `;
+    }else{
+      App.displayConnectMetamask();
+    }
+  },
+
+  // display the form to add a new course
+  displayAddNewCourse: function(){
+    if(App.account){
+      mainContent.innerHTML = `
+      <div class="jumbotron">
+        <h2 class="display-4">Add new course</h2>
+        <p class="lead">Fill the following form in order to create a new course.</p>
+        <p class="lead">
+          <button type="button" class="btn btn-link" onclick="App.displayCourses()">Go back to list of courses</button>
+        </p>
+        <hr class="my-4">
+      </div>
+      <div class="container-fluid">
+        <div class="form-group my-2" style="width: 30rem;">
+          <label for="courseTitle"><b>Title</b></label>
+          <input type="text" class="form-control" id="courseTitle" placeholder="...title">
+        </div>
+        <div class="form-group my-2" style="width: 30rem;">
+          <label for="courseDescription"><b>Description</b></label>
+          <textarea class="form-control rounded-0" id="courseDescription" rows="10" placeholder="...description"></textarea>
+        </div>
+        <div class="form-group my-2" style="width: 30rem;">
+          <label for="courseDate"><b>Date</b></label>
+          <input type="date" class="form-control" id="courseDate">
+        </div>
+        <button class="btn btn-primary my-2">Add</button>
+        <span id="newCourseResult">
+        <span class="alert alert-success" role="alert">
+          Course successfully created!
+        </span>
+        <span class="alert alert-danger" role="alert">
+          Something wrong. Check your compilation.
+        </span>
+        </span>
+      </div>
+      `;
+    }else{
+      App.displayConnectMetamask();
+    }
+  },
+
+  displayEditCourse: function(){
+    if(App.account){
+      mainContent.innerHTML = `
+      <div class="jumbotron">
+        <h2 class="display-4">Edit course</h2>
+        <p class="lead">In this section you can:</p>
+        <ul>
+          <li>add and remove course partecipants</li>
+          <li>send certificate of partecipation</li>
+        </ul>
+        <p class="lead">
+          <button type="button" class="btn btn-link" onclick="App.displayCourses()">Go back to list of courses</button>
+        </p>
+        <hr class="my-4">
+      </div>
+      <div class="container-fluid">
+        <h4>Corso aggiornamento meccanici</h4>
+        <p><b>date:</b> 2020-02-19</p>
+        <h6 class="mt-3">Partecipants:</h6>
+        <div id="editCoursePartecipants">
+        <ul class="list-group" style="width: 30rem;">
+          <li class="list-group-item">
+            <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant()">remove</button>
+            <button type="button" class="btn btn-primary" onclick="App.courseCreateCertificate()">create certificate</button>  Beppino beppini
+            <span id="createCertificateMsg"></span>
+          </li>
+          <li class="list-group-item">
+            <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant()">remove</button>
+            <button type="button" class="btn btn-primary" onclick="App.courseCreateCertificate()">create certificate</button>  Luigi Telesca
+          </li>
+          <li class="list-group-item">
+            <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant()">remove</button>
+            <button type="button" class="btn btn-primary" onclick="App.courseCreateCertificate()">create certificate</button>  Jhon Tacchinazzi
+          </li>
+        </ul>
+        </div>
+        <h6 class="mt-3">Add partecipant:</h6>
+        <div id="editCourseAdd">
+        <ul class="list-group" style="width: 30rem;">
+          <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Beppino beppini</li>
+          <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Luigi Telesca</li>
+          <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Jhon Tacchinazzi</li>
+        </ul>
+        </div>
+      </div>
+      `;
+    }else{
+      App.displayConnectMetamask();
+    }
+  },
+
+  // subscribe to input course
+  courseSubscribe: function(){
+    if(App.account){
+      $("#courseControl").html(`
+        <div class="alert alert-info" role="alert">
+          you are now subscribed to this course
+        </div>
+      `);
+    }else{
+      App.displayConnectMetamask();
+    }
+  },
+
+  // unsubscribe to input course
+  courseUnsubscribe: function(){
+    if(App.account){
+      App.displayCourses();
+    }else{
+      App.displayConnectMetamask();
+    }
+  },
+
+  // delete input course
+  courseDelete: function(){
+    if(App.account){
+      if(confirm("Are you sure to delete the course?")){
+        console.log("delete");
+      }
+      App.displayCourses();
+    }else{
+      App.displayConnectMetamask();
+    }
+  }, 
+
+  // remove course partecipant
+  courseRemovePartecipant: function(){
+    if(App.account){
+      App.displayEditCourse();
+    }else{
+      App.displayConnectMetamask();
+    }
+  }, 
+
+  // add course partecipant
+  courseAddPartecipant: function(){
+    if(App.account){
+      App.displayEditCourse();
+    }else{
+      App.displayConnectMetamask();
+    }
+  }, 
+
+  // create the certificate for the partecipant
+  courseCreateCertificate: function(){
+    if(App.account){
+      $("#createCertificateMsg").html(`
+        <div class="alert alert-success my-2" role="alert">NFT certificate successfully created!</div>`
+      );
+    }else{
+      App.displayConnectMetamask();
+    }
+  },
+
   // Add a new team member wallet address
   addTeamMember: function(){
     let userWalletAddress = $("#memberAddress").val();
