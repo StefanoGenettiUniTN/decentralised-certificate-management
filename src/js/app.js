@@ -679,28 +679,6 @@ App = {
     }
   },
 
-  // subscribe to input course
-  courseSubscribe: function(){
-    if(App.account){
-      $("#courseControl").html(`
-        <div class="alert alert-info" role="alert">
-          you are now subscribed to this course
-        </div>
-      `);
-    }else{
-      App.displayConnectMetamask();
-    }
-  },
-
-  // unsubscribe to input course
-  courseUnsubscribe: function(){
-    if(App.account){
-      App.displayCourses();
-    }else{
-      App.displayConnectMetamask();
-    }
-  },
-
   // remove course partecipant
   courseRemovePartecipant: function(){
     if(App.account){
@@ -851,7 +829,7 @@ getCourses: function(){
                 <li class="list-group-item"><b>Date: </b>`+date+`</li>
               </ul>
               <div class="card-body" id="courseControl">
-                <button class="btn btn-success" onclick="App.courseSubscribe()">Subscribe</button>
+                <button class="btn btn-success" onclick="App.courseSubscribe('`+self_id+`')">Subscribe</button>
                 <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
                 <button class="btn btn-danger" onclick="App.deleteCourse('`+self_id+`')">Delete</button>
               </div>
@@ -878,7 +856,34 @@ deleteCourse: function(courseId){
       }
     })
   }
-}
+},
+
+// subscribe to input course
+courseSubscribe: function(course_id){
+  //Get user id from cookies
+  //user_id = getCookie("user_id");
+  user_id = "648eafa26ef0b43d28e6045b";
+
+  console.log("course_id: "+course_id+" user_id: "+user_id);
+
+  fetch('../api/v1/registrations', {
+      method: 'PATCH',
+      headers: { 'Content-type': 'application/json; charset=UTF-8'},
+      body: JSON.stringify( { course_id: course_id, user_id: user_id } ),
+  })
+  .then((resp) => {
+    App.displayCourses();
+  }).catch( error => console.error(error) ); //catch dell'errore
+},
+
+// unsubscribe to input course
+courseUnsubscribe: function(){
+  if(App.account){
+    App.displayCourses();
+  }else{
+    App.displayConnectMetamask();
+  }
+},
 //...
 
 /**===========*/

@@ -10,6 +10,7 @@ var eagle = require("./build/contracts/Eagle.json");
 
 // Resource REST API VERSION 1
 const course = require('./routes/course.js');
+const subscription = require('./routes/subscription.js');
 //...
 
 // Configure Express.js parsing middleware
@@ -35,6 +36,10 @@ server.get("/Eagle.json", function (request, response) {
 
 // Course API
 server.use("/api/v1", course);
+//...
+
+// Subscription API
+server.use("/api/v1", subscription);
 //...
 
 // Default 404 handler
