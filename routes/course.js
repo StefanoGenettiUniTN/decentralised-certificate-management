@@ -17,4 +17,15 @@ router.get('/courses', async (req, res) => {
     res.status(200).json(response);
 });
 
+router.delete('/courses/:id', async (req, res) => {
+    let course = await Course.findById(req.params.id).exec();
+    if (!course) {
+        res.status(404).json({status: "error"})
+        console.log('resource not found')
+        return;
+    }
+    await course.deleteOne()
+    res.status(204).json({status: "success"});
+});
+
 module.exports = router

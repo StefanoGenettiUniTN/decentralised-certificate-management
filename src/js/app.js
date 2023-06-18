@@ -559,20 +559,6 @@ App = {
       <div class="container-fluid">
         <p><b>Courses:</b></p>
         <div id="output_courses">
-          <div class="card" style="width: 30rem;">
-            <div class="card-body">
-              <h5 class="card-title">Corso aggiornamento meccanici</h5>
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-            </div>
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item"><b>Date: </b>2020-02-19</li>
-            </ul>
-            <div class="card-body" id="courseControl">
-              <button class="btn btn-success" onclick="App.courseSubscribe()">Subscribe</button>
-              <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
-              <button class="btn btn-danger" onclick="App.courseDelete()">Delete</button>
-            </div>
-          </div>
         </div>
       </div>
       <hr class="my-4">
@@ -715,18 +701,6 @@ App = {
     }
   },
 
-  // delete input course
-  courseDelete: function(){
-    if(App.account){
-      if(confirm("Are you sure to delete the course?")){
-        console.log("delete");
-      }
-      App.displayCourses();
-    }else{
-      App.displayConnectMetamask();
-    }
-  }, 
-
   // remove course partecipant
   courseRemovePartecipant: function(){
     if(App.account){
@@ -865,6 +839,7 @@ getCourses: function(){
           let self = course["self"];
           let date = course["date"];
           let users = course["users"];
+          let self_id = self.substring(self.lastIndexOf('/') + 1);
 
           courses_text += `
             <div class="card my-2" style="width: 30rem;">
@@ -878,7 +853,7 @@ getCourses: function(){
               <div class="card-body" id="courseControl">
                 <button class="btn btn-success" onclick="App.courseSubscribe()">Subscribe</button>
                 <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
-                <button class="btn btn-danger" onclick="App.courseDelete()">Delete</button>
+                <button class="btn btn-danger" onclick="App.deleteCourse('`+self_id+`')">Delete</button>
               </div>
             </div>
           `;
@@ -886,6 +861,23 @@ getCourses: function(){
       html_courses.innerHTML += courses_text;
   })
   .catch( error => console.error(error) ); //catch dell'errore
+},
+//...
+
+// Delete the selected course
+deleteCourse: function(courseId){
+  if(confirm("Are you sure to delete the selected course?")){
+    fetch('../api/v1/courses/'+courseId, {
+        method: 'DELETE',
+    })
+    .then((resp) => {
+      if(resp.status==204){
+        App.displayCourses();
+      }else{
+        console.log("error");
+      }
+    })
+  }
 }
 //...
 
