@@ -558,18 +558,20 @@ App = {
       </div>
       <div class="container-fluid">
         <p><b>Courses:</b></p>
-        <div class="card" style="width: 30rem;">
-          <div class="card-body">
-            <h5 class="card-title">Corso aggiornamento meccanici</h5>
-            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-          </div>
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item"><b>Date: </b>2020-02-19</li>
-          </ul>
-          <div class="card-body" id="courseControl">
-            <button class="btn btn-success" onclick="App.courseSubscribe()">Subscribe</button>
-            <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
-            <button class="btn btn-danger" onclick="App.courseDelete()">Delete</button>
+        <div id="output_courses">
+          <div class="card" style="width: 30rem;">
+            <div class="card-body">
+              <h5 class="card-title">Corso aggiornamento meccanici</h5>
+              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item"><b>Date: </b>2020-02-19</li>
+            </ul>
+            <div class="card-body" id="courseControl">
+              <button class="btn btn-success" onclick="App.courseSubscribe()">Subscribe</button>
+              <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
+              <button class="btn btn-danger" onclick="App.courseDelete()">Delete</button>
+            </div>
           </div>
         </div>
       </div>
@@ -592,6 +594,8 @@ App = {
         </div>
       </div>
       `;
+
+      App.getCourses();
     }else{
       App.displayConnectMetamask();
     }
@@ -839,5 +843,59 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
-  }
+  },
+
+ /**===MODEL===*/
+//Get all courses
+getCourses: function(){
+  const html_courses = document.getElementById('output_courses');
+  var courses_text="";
+
+  fetch('../api/v1/courses')
+  .then((resp) => resp.json()) //trasfor data into JSON
+  .then(function(data) {
+
+      for (var i = 0; i < data.length; i++){ //iterate overe recived data
+          var course = data[i];
+
+          console.log(course);
+
+          let title = course["title"];
+          let description = course["description"];
+          let self = course["self"];
+          let date = course["date"];
+          let users = course["users"];
+
+          courses_text += `
+            <div class="card my-2" style="width: 30rem;">
+              <div class="card-body">
+                <h5 class="card-title">`+title+`</h5>
+                <p class="card-text">`+description+`</p>
+              </div>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item"><b>Date: </b>`+date+`</li>
+              </ul>
+              <div class="card-body" id="courseControl">
+                <button class="btn btn-success" onclick="App.courseSubscribe()">Subscribe</button>
+                <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
+                <button class="btn btn-danger" onclick="App.courseDelete()">Delete</button>
+              </div>
+            </div>
+          `;
+      }
+      html_courses.innerHTML += courses_text;
+  })
+  .catch( error => console.error(error) ); //catch dell'errore
+}
+//...
+
+/**===========*/
+
+/**===VIEW===*/
+  
+/**===========*/
+
+/**===CONTROLLER===*/
+  
+/**===========*/
 };
