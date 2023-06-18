@@ -217,35 +217,111 @@ App = {
   displayUploadCertificateForm: function(){
     if(App.account){
       mainContent.innerHTML = `
-        <br>
-        <label for="cert_uri"><b>File URI: </b></label>
-        <input type="text" id="cert_uri" placeholder="URI"/><br>
-        <label for="cert_expdate"><b>Expiration date: </b></label>
-        <input type="date" id="cert_expdate" placeholder="URI"/><br>
-        <label for="cert_noexpdate"><b>Unlimited duration: </b></label>
-        <input id="cert_noexpdate" type="checkbox" /><br>
-        <button onclick="App.mintNFT()">CREATE</button>
+        <h1 class="display-4 mb-4">Upload a certificate</h1> 
+        <div class="col-sm-6">
+          <div class="input-group mb-3">
+            <span class="input-group-text">Name</span>
+            <input type="text" class="upload-form form-control" id="certificate-name" placeholder="Username" required>
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text">Description</span>
+            <textarea class="upload-form form-control" id="certificate-description" required></textarea>
+          </div>
+          <div class="input-group mb-3">
+            <input class="upload-form form-control" type="file" id="file-input" accept="application/pdf" required>
+          </div>
+          <div class="input-group mb-3">
+            <label class="input-group-text">Category</label>
+            <select class="upload-form form-select" id="certificate-category" required>
+              <option value="DFLT">DFLT</option>
+              <option value="FRMZ">FRMZ</option>
+              <option value="SECU">SECU</option>
+              <option value="WELL">WELL</option>
+              <option value="CURR">CURR</option>
+              <option value="LANG">LANG</option>
+            </select>
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text">Achievement date</span>
+            <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-achievement" required>
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text">Expiration date</span>
+            <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-expiration" required>
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text">Issuing authority</span>
+            <input type="text" class="upload-form form-control" id="certificate-authority" required>
+          </div>
+          <button type="button" class="btn btn-primary" onclick="App.uploadClick()" id="btn-upload">Upload</button>
+        </div>
       `;
-    }else{
+
+    }else{ // If wallet is not connected
       App.displayConnectMetamask();
+    }
+  },
+ 
+  uploadClick: function() {    
+
+    // Check if all required inputs field have been compiled
+    var valid = true;
+    var inputs = document.getElementsByClassName("upload-form");
+
+    for (let i = inputs.length-1; i >= 0; i--) { //descending for to make validation start from the first input
+      if (!inputs[i].reportValidity()) {
+        valid = false;        
+      }      
+    }
+    
+    if(valid) {           
+      //Get all the information
+      const name = $('#certificate-name').val();
+      const description = $('#certificate-description').val();
+      const category = $('#certificate-category').val();
+      const issuing_authority = $('#certificate-authority').val();
+      const date_achievement = $('#certificate-achievement').val();
+      const date_expiration = $('#certificate-expiration').val();    
+      
+      // Get the file data
+      const fileInput = $('#file-input')[0];
+      const file = fileInput.files[0];     
+      
+      // Create a new FormData object
+      const formData = new FormData();
+      
+      // Append the file to the FormData object        
+      formData.append('file', file);
+      formData.append('name', name)
+      formData.append('description', description)
+      formData.append('category', category)
+      formData.append('date_achievement', date_achievement)
+      formData.append('date_expiration', date_expiration)
+      formData.append('issuing_authority', issuing_authority)        
+
+      // Send the file to the server
+      fetch('/test-page', {
+        method: 'POST',
+        body: formData
+      })     
+      .then(response => response.json()) 
+      .then(async data => {
+        // Handle the server response
+        await App.mintNFT(data.IpfsHash, date_expiration);
+      })
+      .catch(error => {
+        // Handle any errors
+        console.error(error);
+      });
     }
   },
 
   // create new certificate
-  mintNFT: async function(){
-    let uri = $("#cert_uri").val();
-    let expiration_date = $("#cert_expdate").val();
-    let expiration_date_epoch = Math.floor(new Date(expiration_date).getTime() / 1000);
-    let unlimited_duration = $('#cert_noexpdate').is(':checked')
+  mintNFT: async function(cert_uri, date_expiration){
 
-    console.log("uri");
-    console.log(uri);
-    console.log("expiration_date");
-    console.log(expiration_date);
-    console.log("expiration_date_epoch");
-    console.log(expiration_date_epoch);
-    console.log("unlimited_duration");
-    console.log(unlimited_duration);
+    let expiration_date_epoch = Math.floor(new Date(date_expiration).getTime() / 1000);
+    //let unlimited_duration = $('#cert_noexpdate').is(':checked')
+    let unlimited_duration = false;
 
     App.contracts.Certificate.deployed().then(async function(instance){
       certificateInstance = instance;
@@ -254,7 +330,7 @@ App = {
         // Call the mintToken smart contract function to issue a new token
         // to the given address. This returns a transaction object, but the 
         // transaction hasn't been confirmed yet, so it doesn't have our token id.      
-        const result = await certificateInstance.safeMint(uri, expiration_date_epoch, unlimited_duration, {from: App.account});
+        const result = await certificateInstance.safeMint(cert_uri, expiration_date_epoch, unlimited_duration, {from: App.account});
 
         // The OpenZeppelin base ERC721 contract emits a Transfer event 
         // when a token is issued.
@@ -290,7 +366,8 @@ App = {
         } else {
           role = "You are <b>not</b> the team leader";
         }
-        console.log(role);console.log(contractRole);
+        console.log(role);
+        console.log(contractRole);
         //...end get account role
       } catch(err){
         console.log("error:");
