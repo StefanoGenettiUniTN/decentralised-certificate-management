@@ -60,4 +60,17 @@ contract Eagle {
         if (Role.STANDARD == userRole) result = "Standard user";
         return result;
     }
+
+    // Get user id of the sender
+    function getMyUserId() public view returns (uint256){
+        require(userAddressToUserId[msg.sender]!=0, "you are not a team member");    // the user must be already added in the team
+        return userAddressToUserId[msg.sender];
+    } 
+
+    // Get user id of the input wallet
+    // TODO: this invocation must be used only by the team leader
+    function getUserId(address userWallet) public view returns (uint256){
+        require(userAddressToUserId[userWallet]!=0, "you are not a team member");    // the user must be already added in the team
+        return userAddressToUserId[userWallet];
+    } 
 }

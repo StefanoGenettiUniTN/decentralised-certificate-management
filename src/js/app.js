@@ -2,6 +2,7 @@ App = {
   web3Provider: null,
   account: null,
   contracts: {},
+  blockchainid: -1,
 
   init: function() {
     console.log("Initialization function")
@@ -100,7 +101,7 @@ App = {
           App.account = accounts[0];
 
           App.initWeb3();
-          
+
           mainContent.innerHTML = `
             <div class="jumbotron">
               <h1 class="display-4">Decentralised certificate managament</h1>
@@ -545,7 +546,7 @@ App = {
   },
 
   // display list of the available courses
-  displayCourses: function(){
+  displayCourses: async function(){
     if(App.account){
       mainContent.innerHTML = `
       <div class="jumbotron">
@@ -564,24 +565,20 @@ App = {
       <hr class="my-4">
       <div class="container-fluid">
         <p><b>Current subscriptions:</b></p>
-        <div class="card" style="width: 30rem;">
-          <div class="card-body">
-            <h5 class="card-title">Corso aggiornamento meccanici</h5>
-            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-          </div>
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item"><b>Date: </b>2020-02-19</li>
-          </ul>
-          <div class="card-body" id="courseControl">
-            <button class="btn btn-secondary" onclick="App.courseUnsubscribe()">Unsubscribe</button>
-            <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
-            <button class="btn btn-danger" onclick="App.courseDelete()">Delete</button>
-          </div>
+        <div id="output_courses_sub">
         </div>
       </div>
       `;
 
-      App.getCourses();
+      if(App.blockchainid==-1){
+        let result = await App.setBlockchainId();  // check if the user is in the team
+        if(result==-1){
+          console.log("you are not part of the team");
+          App.displayNotInTeam();
+          return;
+        }
+      }
+      App.getCourses(App.blockchainid);
     }else{
       App.displayConnectMetamask();
     }
@@ -799,15 +796,19 @@ App = {
 
  /**===MODEL===*/
 //Get all courses
-getCourses: function(){
+getCourses: function(userId){
   const html_courses = document.getElementById('output_courses');
+  const html_courses_sub = document.getElementById('output_courses_sub');
   var courses_text="";
+  var courses_text_sub="";
 
   fetch('../api/v1/courses')
   .then((resp) => resp.json()) //trasfor data into JSON
   .then(function(data) {
 
-      for (var i = 0; i < data.length; i++){ //iterate overe recived data
+      for (var i = 0; i < data.length; i++){ // iterate overe recived data and write the course
+                                             // under courses or current subscription whether the
+                                             // current user is subscribed or not
           var course = data[i];
 
           console.log(course);
@@ -819,24 +820,42 @@ getCourses: function(){
           let users = course["users"];
           let self_id = self.substring(self.lastIndexOf('/') + 1);
 
-          courses_text += `
-            <div class="card my-2" style="width: 30rem;">
-              <div class="card-body">
-                <h5 class="card-title">`+title+`</h5>
-                <p class="card-text">`+description+`</p>
+          if(users.includes(Number(userId))){ // user already subscribed to the course
+            courses_text_sub += `
+              <div class="card my-2" style="width: 30rem;">
+                <div class="card-body">
+                  <h5 class="card-title">`+title+`</h5>
+                  <p class="card-text">`+description+`</p>
+                </div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item"><b>Date: </b>`+date+`</li>
+                </ul>
+                <div class="card-body" id="courseControl">
+                  <button class="btn btn-secondary" onclick="App.courseUnsubscribe('`+self_id+`')">Unsubscribe</button>
+                </div>
               </div>
-              <ul class="list-group list-group-flush">
-                <li class="list-group-item"><b>Date: </b>`+date+`</li>
-              </ul>
-              <div class="card-body" id="courseControl">
-                <button class="btn btn-success" onclick="App.courseSubscribe('`+self_id+`')">Subscribe</button>
-                <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
-                <button class="btn btn-danger" onclick="App.deleteCourse('`+self_id+`')">Delete</button>
+            `;
+          }else{  // user is not subscribed yet
+            courses_text += `
+              <div class="card my-2" style="width: 30rem;">
+                <div class="card-body">
+                  <h5 class="card-title">`+title+`</h5>
+                  <p class="card-text">`+description+`</p>
+                </div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item"><b>Date: </b>`+date+`</li>
+                </ul>
+                <div class="card-body" id="courseControl">
+                  <button class="btn btn-success" onclick="App.courseSubscribe('`+self_id+`')">Subscribe</button>
+                  <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
+                  <button class="btn btn-danger" onclick="App.deleteCourse('`+self_id+`')">Delete</button>
+                </div>
               </div>
-            </div>
-          `;
+            `;
+          }
       }
       html_courses.innerHTML += courses_text;
+      html_courses_sub.innerHTML += courses_text_sub;
   })
   .catch( error => console.error(error) ); //catch dell'errore
 },
@@ -860,20 +879,20 @@ deleteCourse: function(courseId){
 
 // subscribe to input course
 courseSubscribe: function(course_id){
-  //Get user id from cookies
-  //user_id = getCookie("user_id");
-  user_id = "648eafa26ef0b43d28e6045b";
+  if(App.blockchainid != -1){
+    user_blockchain_id = App.blockchainid;
 
-  console.log("course_id: "+course_id+" user_id: "+user_id);
+    console.log("course_id: "+course_id+" user_blockchain_id: "+user_blockchain_id);
 
-  fetch('../api/v1/registrations', {
-      method: 'PATCH',
-      headers: { 'Content-type': 'application/json; charset=UTF-8'},
-      body: JSON.stringify( { course_id: course_id, user_id: user_id } ),
-  })
-  .then((resp) => {
-    App.displayCourses();
-  }).catch( error => console.error(error) ); //catch dell'errore
+    fetch('../api/v1/registrations', {
+        method: 'PATCH',
+        headers: { 'Content-type': 'application/json; charset=UTF-8'},
+        body: JSON.stringify( { course_id: course_id, user_blockchain_id: user_blockchain_id } ),
+    })
+    .then((resp) => {
+      App.displayCourses();
+    }).catch( error => console.error(error) ); //catch dell'errore
+  }
 },
 
 // unsubscribe to input course
@@ -889,10 +908,39 @@ courseUnsubscribe: function(){
 /**===========*/
 
 /**===VIEW===*/
-  
+
+// display error message if the user
+// is not in the team yet
+displayNotInTeam: function(){
+  mainContent.innerHTML = `<p>Sorry, you are not in the team yet. Ask the team leader to register yourself.</p>`;
+},
+
 /**===========*/
 
 /**===CONTROLLER===*/
-  
+
+// set blockchain id: each user in the system has an associated id stored in
+// the blockchain. If the request does not complete successfully, then it
+// means that the user is not part of the organization yet.
+// If this is the case an alert is displayed and App.blockchainid is set
+// to -1.
+setBlockchainId: async function (){
+  console.log("app set blockchainid");
+  let result = await App.contracts.Eagle.deployed().then(async function(instance){
+    EagleInstance = instance;
+    try {
+      let result = await EagleInstance.getMyUserId({from: App.account});
+      App.blockchainid = result;
+    }catch(err){
+      return -1;
+    }
+  }).catch(function(err){
+    console.log("error:")
+    console.log(err.message);
+  });
+
+  return result;
+}
+
 /**===========*/
 };
