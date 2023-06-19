@@ -74,7 +74,7 @@ App = {
           App.initWeb3();
           
           mainContent.innerHTML = `Wallet connected: <span>${App.account}</span>`;
-          accountaddress.innerHTML = `<ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="#"><span class="material-symbols-outlined">account_circle</span><span">${App.account}</span></a></li></ul><button type="button" class="btn btn-danger position-relative" onclick="App.disconnectMetamask();">Logout</button>`
+          accountaddress.innerHTML = `<ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="#" onclick='App.displayProfile();'><span class="material-symbols-outlined">account_circle</span><span>${App.account}</span></a></li></ul><button type="button" class="btn btn-danger position-relative" onclick="App.disconnectMetamask();">Logout</button>`
         })
         .catch((error) => {
           console.log(error, error.code);
@@ -263,22 +263,34 @@ App = {
     App.showSpinner();
     if(App.account){
       mainContent.innerHTML = `
-        <label for="memberAddress">Add team member</label><br>
-        <input type="text" id="memberAddress" name="memberAddress"><br>
-        <label for="memberRole">What is its role?</label><br>
-        <select id="memberRole" size="2">
-          <option value="0">Team leader</option>
-          <option value="1">Standard</option>
-        </select><br>
-        <button onclick="App.addTeamMember()">Add</button>
+        <div class='form-row'>
+          <div class='form-group col-md-3'>
+            <label for="memberAddress">Add team member</label><br>
+            <input type="text" class='form-control' id="memberAddress" name="memberAddress"><br>
+            <label for="memberRole">What is its role?</label><br>
+            <select id="memberRole" class='form-control'>
+              <option value="0">Team leader</option>
+              <option value="1">Standard</option>
+            </select><br>
+          <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
+          </div>
+        </div>
         <hr>
-        <div id="teamList"></div>
+        <div class='form-row'>
+        <div id="teamList" class='list-group list-group-flush'></div>
+        </div>
       `;
       
       let eagleContractInstance = await App.contracts.Eagle.deployed();
-      eagleContractInstance.getTeamMembers().then(function(result){
+      eagleContractInstance.getTeamMembers().then(async function(result){
         for(teamMember in result){
-          document.getElementById("teamList").innerHTML += `<p>`+result[teamMember]+`</p>`;
+          let role = await eagleContractInstance.getMemberRole(result[teamMember]);
+          if(role === "TL"){
+            document.getElementById("teamList").innerHTML += `<a href="#" class="list-group-item list-group-item-action"><p><span class="material-symbols-outlined">supervisor_account</span>  `+result[teamMember]+`</p></a><br>`;
+          } else {
+            document.getElementById("teamList").innerHTML += `<a href="#" class="list-group-item list-group-item-action"><p><span class="material-symbols-outlined">account_circle</span>  `+result[teamMember]+`</p></a><br>`;
+          }
+          
         }
       }).catch(function(err){
         console.log("error:")
@@ -408,5 +420,10 @@ App = {
     setTimeout(() => {
       spinnerwrapper.style.display = 'none';
     }, 1000);
+  },
+
+  // Display the single team member and its certificates
+  displaySpecificUserCertificates: function(){
+
   }
 };
