@@ -253,7 +253,10 @@ App = {
             <span class="input-group-text">Issuing authority</span>
             <input type="text" class="upload-form form-control" id="certificate-authority" required>
           </div>
-          <button type="button" class="btn btn-primary" onclick="App.uploadClick()" id="btn-upload">Upload</button>
+          <button type="button" class="btn btn-primary mb-4" onclick="App.uploadClick()" id="btn-upload">Upload</button>
+          <br>
+          <div id="upload-result" class="invisible alert" role="alert" style="width: 30rem;">
+          </div> 
         </div>
       `;
 
@@ -307,7 +310,20 @@ App = {
       .then(response => response.json()) 
       .then(async data => {
         // Handle the server response
-        await App.mintNFT(data.IpfsHash, date_expiration);
+        mint = await App.mintNFT(data.IpfsHash, date_expiration);
+
+        //show the result alert
+        resultAlert = $("#upload-result");
+        resultAlert.removeClass();
+        resultAlert.addClass("alert")
+
+        if(mint) {
+          resultAlert.addClass("alert-success")
+          resultAlert.text("The certificate has been uploaded")
+        } else {
+          resultAlert.addClass("alert-danger")
+          resultAlert.text("An error occured while uploading the certificate")
+        }
       })
       .catch(error => {
         // Handle any errors
@@ -323,8 +339,9 @@ App = {
     //let unlimited_duration = $('#cert_noexpdate').is(':checked')
     let unlimited_duration = false;
 
-    App.contracts.Certificate.deployed().then(async function(instance){
+    await App.contracts.Certificate.deployed().then(async function(instance){
       certificateInstance = instance;
+      minted = true //return value, if no errors occur = true
 
       try {
         // Call the mintToken smart contract function to issue a new token
@@ -339,16 +356,21 @@ App = {
               console.log(response.args.tokenId.toString());
           }else{
               console.log(error);
+              minted = false;
           }
         });
       }catch(err){
         console.log("error:")
         console.log(err);
+        minted = false;
       }
     }).catch(function(err){
       console.log("error:")
       console.log(err.message);
+      minted = false;
     });
+
+    return minted
   },
 
   // display profile
