@@ -849,7 +849,7 @@ getCourses: function(userId){
   var courses_text_sub="";
 
   fetch('../api/v1/courses')
-  .then((resp) => resp.json()) //trasfor data into JSON
+  .then((resp) => resp.json()) //transform data into JSON
   .then(function(data) {
 
       for (var i = 0; i < data.length; i++){ // iterate overe recived data and write the course
@@ -862,7 +862,7 @@ getCourses: function(userId){
           let title = course["title"];
           let description = course["description"];
           let self = course["self"];
-          let date = course["date"];
+          let date = course["date"].split('T')[0];
           let users = course["users"];
           let self_id = self.substring(self.lastIndexOf('/') + 1);
 
@@ -878,6 +878,7 @@ getCourses: function(userId){
                 </ul>
                 <div class="card-body" id="courseControl">
                   <button class="btn btn-secondary" onclick="App.courseUnsubscribe('`+self_id+`')">Unsubscribe</button>
+                  <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
                 </div>
               </div>
             `;
@@ -942,11 +943,20 @@ courseSubscribe: function(course_id){
 },
 
 // unsubscribe to input course
-courseUnsubscribe: function(){
-  if(App.account){
-    App.displayCourses();
-  }else{
-    App.displayConnectMetamask();
+courseUnsubscribe: function(course_id){
+  if(App.blockchainid != -1){
+    user_blockchain_id = App.blockchainid;
+
+    console.log("course_id: "+course_id+" user_blockchain_id: "+user_blockchain_id);
+
+    fetch('../api/v1/unsubscribe', {
+        method: 'PATCH',
+        headers: { 'Content-type': 'application/json; charset=UTF-8'},
+        body: JSON.stringify( { course_id: course_id, user_blockchain_id: user_blockchain_id } ),
+    })
+    .then((resp) => {
+      App.displayCourses();
+    }).catch( error => console.error(error) ); //catch dell'errore
   }
 },
 //...
