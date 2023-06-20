@@ -265,7 +265,7 @@ App = {
       let eagleContractInstance = await App.contracts.Eagle.deployed();
       let members = await eagleContractInstance.getTeamMembers();
       let role = await eagleContractInstance.getMemberRole(App.account);
-      if(role!='TL'){
+      if(role!='TL' && role!=undefined){
         mainContent.innerHTML = `
           <span>You are not a <strong>Team Leader</strong>. You cannot see the content of this page.</span><br>
           <span>You can click any other element in the menu to use the application.</span>
