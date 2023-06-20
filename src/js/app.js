@@ -597,32 +597,78 @@ App = {
         <hr class="my-4">
       </div>
       <div class="container-fluid">
-        <div class="form-group my-2" style="width: 30rem;">
-          <label for="courseTitle"><b>Title</b></label>
-          <input type="text" class="form-control" id="courseTitle" placeholder="...title">
+        <div class="col-sm-6"> 
+          <div class="input-group mb-3">
+            <span class="input-group-text">Title</span>
+            <input type="text" class="course-form form-control" id="course-title" placeholder="title" required>
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text">Description</span>
+            <textarea class="course-form form-control" id="course-description" placeholder="description" required></textarea>
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text">Date</span>
+            <input class="course-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="course-date" required>
+          </div>
+          <button type="button" class="btn btn-primary mb-4" onclick="App.addCourseClick()" id="btn-add-course">Upload</button>
+          <br>
+          <div id="course-result" class="invisible alert" role="alert" style="width: 30rem;">
         </div>
-        <div class="form-group my-2" style="width: 30rem;">
-          <label for="courseDescription"><b>Description</b></label>
-          <textarea class="form-control rounded-0" id="courseDescription" rows="10" placeholder="...description"></textarea>
-        </div>
-        <div class="form-group my-2" style="width: 30rem;">
-          <label for="courseDate"><b>Date</b></label>
-          <input type="date" class="form-control" id="courseDate">
-        </div>
-        <button class="btn btn-primary my-2">Add</button>
-        <span id="newCourseResult">
-        <span class="alert alert-success" role="alert">
-          Course successfully created!
-        </span>
-        <span class="alert alert-danger" role="alert">
-          Something wrong. Check your compilation.
-        </span>
-        </span>
       </div>
       `;
     }else{
       App.displayConnectMetamask();
     }
+  },
+
+  addCourseClick: function() {
+    // Check if all required inputs field have been compiled
+    var valid = true;
+    var inputs = document.getElementsByClassName("course-form");
+
+    for (let i = inputs.length-1; i >= 0; i--) { //descending for to make validation start from the first input
+      if (!inputs[i].reportValidity()) {
+        valid = false;        
+      }      
+    }
+    
+    if(valid) {
+      // Get course info
+      const title = $("#course-title").val();
+      const description = $("#course-description").val();
+      const date = $("#course-date").val();
+      
+      // Send requesto to the server
+      fetch('/api/v1/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify(
+        { title: title,
+          description: description,
+          date: date,
+        } ),
+      })   
+      .then(async data => {
+        
+        //show the result alert
+        resultAlert = $("#course-result");
+        resultAlert.removeClass();
+        resultAlert.addClass("alert")
+
+        if(data.status == 201) {
+          resultAlert.addClass("alert-success")
+          resultAlert.text("Course successfully created!")
+        } else {
+          resultAlert.addClass("alert-danger")
+          resultAlert.text("Something wrong. Check your compilation.")
+        }
+      })
+      .catch(error => {
+        // Handle any errors
+        console.error(error);
+      });
+    }      
+    
   },
 
   displayEditCourse: function(){
