@@ -262,41 +262,55 @@ App = {
   displayTeam: async function(){
     App.showSpinner();
     if(App.account){
-      mainContent.innerHTML = `
-        <div class='form-row'>
-          <div class='form-group col-md-3'>
-            <label for="memberAddress">Add team member</label><br>
-            <input type="text" class='form-control' id="memberAddress" name="memberAddress"><br>
-            <label for="memberRole">What is its role?</label><br>
-            <select id="memberRole" class='form-control'>
-              <option value="0">Team leader</option>
-              <option value="1">Standard</option>
-            </select><br>
-          <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
-          </div>
-        </div>
-        <hr>
-        <div class='form-row'>
-        <div id="teamList" class='list-group list-group-flush'></div>
-        </div>
-      `;
-      
       let eagleContractInstance = await App.contracts.Eagle.deployed();
-      eagleContractInstance.getTeamMembers().then(async function(result){
-        for(teamMember in result){
-          let role = await eagleContractInstance.getMemberRole(result[teamMember]);
+      let members = await eagleContractInstance.getTeamMembers();
+      let role = await eagleContractInstance.getMemberRole(App.account);
+      if(role!='TL'){
+        mainContent.innerHTML = `
+          <span>You are not a <strong>Team Leader</strong>. You cannot see the content of this page.</span><br>
+          <span>You can click any other element in the menu to use the application.</span>
+        `
+      } else {
+        mainContent.innerHTML = `
+          <div class='form-row'>
+            <div class='form-group col-md-6'>
+              <label for="memberAddress">Add team member</label><br>
+              <input type="text" class='form-control' id="memberAddress" name="memberAddress"><br>
+              <div class='row'> 
+                <div class='col'>
+                  <label for="memberName">Add team member name</label><br>
+                  <input type="text" class='form-control' id="memberName" name="memberName"><br>
+                </div>
+                <div class='col'>
+                  <label for="memberSurname">Add team member surname</label><br>
+                  <input type="text" class='form-control' id="memberSurname" name="memberSurname"><br>
+                </div>
+              </div>
+              <label for="memberRole">What is its role?</label><br>
+              <select id="memberRole" class='form-control'>
+                <option value="0">Team leader</option>
+                <option value="1">Standard</option>
+              </select><br>
+            <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
+            </div>
+          </div>
+          <hr>
+          <div class='form-row'>
+          <div id="teamList" class='list-group list-group-flush'></div>
+          </div>
+        `;
+        
+        
+        for(teamMember in members){
+          role = await eagleContractInstance.getMemberRole(members[teamMember]);
           if(role === "TL"){
-            document.getElementById("teamList").innerHTML += `<a href="#" class="list-group-item list-group-item-action"><p><span class="material-symbols-outlined">supervisor_account</span>  `+result[teamMember]+`</p></a><br>`;
+            document.getElementById("teamList").innerHTML += `<a class='list-group-item list-group-item-action' onclick='App.displaySpecificUserCertificates(this.lastChild.innerHTML);'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span></a><br>`;
           } else {
-            document.getElementById("teamList").innerHTML += `<a href="#" class="list-group-item list-group-item-action"><p><span class="material-symbols-outlined">account_circle</span>  `+result[teamMember]+`</p></a><br>`;
+            document.getElementById("teamList").innerHTML += `<a class="list-group-item list-group-item-action" onclick='App.displaySpecificUserCertificates(this.lastChild.innerHTML);'><span class="material-symbols-outlined">account_circle</span>  <span id='address'>`+members[teamMember]+`</span></a><br>`;
           }
           
         }
-      }).catch(function(err){
-        console.log("error:")
-        console.log(err.message);
-      });
-
+      }
     }else{
       App.displayConnectMetamask();
     }
@@ -423,7 +437,87 @@ App = {
   },
 
   // Display the single team member and its certificates
-  displaySpecificUserCertificates: function(){
+  displaySpecificUserCertificates: function(user_address){
+    console.log(user_address);
+    App.showSpinner();
+    if(App.account){
+      App.contracts.Certificate.deployed().then(function(instance){
+        certificateInstance = instance;       
+        return certificateInstance.getTokensOwnedByAnotherUser(user_address, {from: App.account});
+      }).then(async function(result){
+        console.log(result);
+        mainContent.innerHTML = `
+          <button id='back' class='btn btn-primary' onclick="App.displayTeam();">Back</button>
+          <br>
+          <p>You are viewing the certificates of user <strong>${user_address}</strong></p>
+          <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
+        `;
+        
+        let token_id;
+        let cert_uri;
+        for(cert in result){
+          token_id = parseInt(result[cert]);
+          
+          console.log("token_id: "+token_id);
 
+          // for each retrived certificate id we need to read the corresponding uri
+          // to get the data we are interested in
+          cert_uri = await certificateInstance.tokenURI.call(token_id);
+          console.log(cert_uri);
+
+          // for each retrived certificate id we need to
+          // check whether or not it is still valid
+          cert_valid = await certificateInstance.tokenIsValid.call(token_id);
+          console.log("valid: "+cert_valid);
+
+          //JSON parsing
+          await $.getJSON(cert_uri, function(result){
+            console.log(result);
+            
+            let name = result.name;
+            let description = result.description;
+            let document = result.document;
+            let category = result.category;
+            let date_achievement = result.date_achievement;
+            let date_expiration = result.date_expiration;
+            let issuing_authority = result.issuing_authority;
+
+            $("#certificateList").append(`
+              <div class="col mb-4">
+                <div class="card" style="width: 25rem;">
+                  <img src="images/defaultCertificateIcon.png" class="card-img-top">
+                  <div class="card-body">
+                  <h5 class="card-title">`+name+`</h5>
+                  <p class="card-text">`+description+`</p>
+                  </div>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
+                    <li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>
+                    <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
+                    <li class="list-group-item"><b>category: </b>`+category+`</li>
+                    <li class="list-group-item"><b>validity: </b>`+cert_valid+`</li>
+                  </ul>
+                  <div class="card-body">
+                    <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
+                    <button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>
+                    <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`')">Invalidate</button>
+                    <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`')">Set valid</button>
+                  </div>
+                </div>
+              </div>
+              `);            
+
+          }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
+          //...end JSON parsing
+        }
+
+      }).catch(function(err){
+        console.log("error:")
+        console.log(err.message);
+      });
+    }else{
+      App.displayConnectMetamask();
+    }
+    App.hideSpinner();
   }
 };

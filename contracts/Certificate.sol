@@ -77,6 +77,24 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
     }
 
     //TODO: spostarla in Eagle.sol
+    function getTokensOwnedByAnotherUser(address user) public view returns (uint256[] memory) {
+        uint256 numberOfExistingTokens = _tokenIdCounter.current();
+        uint256 numberOfTokensOwned = balanceOf(user);
+        uint256[] memory ownedTokenIds = new uint256[](numberOfTokensOwned);
+        
+        uint256 currentIndex = 0;
+        for (uint256 i = 0; i < numberOfExistingTokens; i++) {
+            uint256 tokenId = i;
+            if(!_exists(tokenId)) continue; // the token does not exist anymore //TODO: risolvere in altro modo
+            if (ownerOf(tokenId) != user) continue;
+            ownedTokenIds[currentIndex] = tokenId;
+            currentIndex += 1;
+        }
+
+        return ownedTokenIds;
+    }
+
+    // TODO: spostarla in Eagle.sol
     function getTokensOwnedByMe() public view returns (uint256[] memory) {
         uint256 numberOfExistingTokens = _tokenIdCounter.current();
         uint256 numberOfTokensOwned = balanceOf(msg.sender);
