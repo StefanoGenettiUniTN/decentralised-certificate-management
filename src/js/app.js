@@ -100,63 +100,69 @@ App = {
           <br>
           <div id="certificateList"></div>
         `;
-        
-        let token_id;
-        let cert_uri;
-        for(cert in result){
-          token_id = parseInt(result[cert]);
-          
-          console.log("token_id: "+token_id);
-
-          // for each retrived certificate id we need to read the corresponding uri
-          // to get the data we are interested in
-          cert_uri = await certificateInstance.tokenURI.call(token_id);
-          console.log(cert_uri);
-
-          // for each retrived certificate id we need to
-          // check whether or not it is still valid
-          cert_valid = await certificateInstance.tokenIsValid.call(token_id);
-          console.log("valid: "+cert_valid);
-
-          //JSON parsing
-          await $.getJSON(cert_uri, function(result){
-            console.log(result);
+        if(result.length>0){
+          let token_id;
+          let cert_uri;
+          for(cert in result){
+            token_id = parseInt(result[cert]);
             
-            let name = result.name;
-            let description = result.description;
-            let document = result.document;
-            let category = result.category;
-            let date_achievement = result.date_achievement;
-            let date_expiration = result.date_expiration;
-            let issuing_authority = result.issuing_authority;
+            console.log("token_id: "+token_id);
 
-            $("#certificateList").append(`
-                <div class="card" style="width: 25rem;">
-                  <img src="images/defaultCertificateIcon.png" class="card-img-top">
-                  <div class="card-body">
-                  <h5 class="card-title">`+name+`</h5>
-                  <p class="card-text">`+description+`</p>
-                  </div>
-                  <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
-                    <li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>
-                    <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
-                    <li class="list-group-item"><b>category: </b>`+category+`</li>
-                    <li class="list-group-item"><b>validity: </b>`+cert_valid+`</li>
-                  </ul>
-                  <div class="card-body">
-                    <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
-                    <button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>
-                    <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`')">Invalidate</button>
-                    <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`')">Set valid</button>
-                  </div>
-                </div>
-              `);            
+            // for each retrived certificate id we need to read the corresponding uri
+            // to get the data we are interested in
+            cert_uri = await certificateInstance.tokenURI.call(token_id);
+            console.log(cert_uri);
 
-          }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
-          //...end JSON parsing
+            // for each retrived certificate id we need to
+            // check whether or not it is still valid
+            cert_valid = await certificateInstance.tokenIsValid.call(token_id);
+            console.log("valid: "+cert_valid);
+
+            //JSON parsing
+            await $.getJSON(cert_uri, function(result){
+              console.log(result);
+              
+              let name = result.name;
+              let description = result.description;
+              let document = result.document;
+              let category = result.category;
+              let date_achievement = result.date_achievement;
+              let date_expiration = result.date_expiration;
+              let issuing_authority = result.issuing_authority;
+
+              $("#certificateList").append(`
+                  <div class="card" style="width: 25rem;">
+                    <img src="images/defaultCertificateIcon.png" class="card-img-top">
+                    <div class="card-body">
+                    <h5 class="card-title">`+name+`</h5>
+                    <p class="card-text">`+description+`</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
+                      <li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>
+                      <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
+                      <li class="list-group-item"><b>category: </b>`+category+`</li>
+                      <li class="list-group-item"><b>validity: </b>`+cert_valid+`</li>
+                    </ul>
+                    <div class="card-body">
+                      <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
+                      <button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>
+                      <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`')">Invalidate</button>
+                      <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`')">Set valid</button>
+                    </div>
+                  </div>
+                `);            
+
+            }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
+            //...end JSON parsing
+          }
+        } else {
+          certificateList.innerHTML=`
+            <div class="alert alert-warning" role="alert">
+              You don\'t have any certificate to show!
+            </div>
+          `
         }
-
       }).catch(function(err){
         console.log("error:")
         console.log(err.message);
@@ -304,9 +310,9 @@ App = {
         for(teamMember in members){
           role = await eagleContractInstance.getMemberRole(members[teamMember]);
           if(role === "TL"){
-            document.getElementById("teamList").innerHTML += `<a class='list-group-item list-group-item-action' onclick='App.displaySpecificUserCertificates(this.lastChild.innerHTML);'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span></a><br>`;
+            document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0\xa0<button class='btn btn-primary' onclick='App.displaySpecificUserCertificates("`+members[teamMember]+`");'>Show certificates</button></div><br>`;
           } else {
-            document.getElementById("teamList").innerHTML += `<a class="list-group-item list-group-item-action" onclick='App.displaySpecificUserCertificates(this.lastChild.innerHTML);'><span class="material-symbols-outlined">account_circle</span>  <span id='address'>`+members[teamMember]+`</span></a><br>`;
+            document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">account_circle</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0\xa0<button class='btn btn-primary' onclick='App.displaySpecificUserCertificates("`+members[teamMember]+`");'>Show certificates</button></div><br>`;
           }
           
         }
@@ -365,7 +371,7 @@ App = {
   },
 
   // Invalidate NFT
-  invalidateNFT: function(tokenId){
+  invalidateNFT: function(tokenId, address){
     App.showSpinner();
     App.contracts.Certificate.deployed().then(async function(instance){
       CertificateInstance = instance;
@@ -374,7 +380,12 @@ App = {
         if(confirm("Are you sure to set the certificate not valid?")){        
           let result = await CertificateInstance.setCertificateNotValid(tokenId, {from: App.account});
         }
-        App.displayCertificates();
+        if(address==undefined){
+          App.displayCertificates();
+        } else {
+          App.displaySpecificUserCertificates(address);
+        }
+        
       }catch(err){
         console.log("error:")
         console.log(err);
@@ -388,7 +399,7 @@ App = {
   },
 
   // Set the NFT as valid
-  validateNFT: function(tokenId){
+  validateNFT: function(tokenId, address){
     App.showSpinner();
 
     console.log("validate "+tokenId);
@@ -400,7 +411,11 @@ App = {
         if(confirm("Are you sure to set the certificate valid?")){        
           let result = await CertificateInstance.setCertificateValid(tokenId, {from: App.account});
         }
-        App.displayCertificates();
+        if(address==undefined){
+          App.displayCertificates();
+        } else {
+          App.displaySpecificUserCertificates(address);
+        }
       }catch(err){
         console.log("error:")
         console.log(err);
@@ -499,9 +514,8 @@ App = {
                   </ul>
                   <div class="card-body">
                     <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
-                    <button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>
-                    <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`')">Invalidate</button>
-                    <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`')">Set valid</button>
+                    <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`')">Invalidate</button>
+                    <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`')">Set valid</button>
                   </div>
                 </div>
               </div>
