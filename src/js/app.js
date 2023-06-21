@@ -625,57 +625,6 @@ App = {
     }
   },
 
-  displayEditCourse: function(){
-    if(App.account){
-      mainContent.innerHTML = `
-      <div class="jumbotron">
-        <h2 class="display-4">Edit course</h2>
-        <p class="lead">In this section you can:</p>
-        <ul>
-          <li>add and remove course partecipants</li>
-          <li>send certificate of partecipation</li>
-        </ul>
-        <p class="lead">
-          <button type="button" class="btn btn-link" onclick="App.displayCourses()">Go back to list of courses</button>
-        </p>
-        <hr class="my-4">
-      </div>
-      <div class="container-fluid">
-        <h4>Corso aggiornamento meccanici</h4>
-        <p><b>date:</b> 2020-02-19</p>
-        <h6 class="mt-3">Partecipants:</h6>
-        <div id="editCoursePartecipants">
-        <ul class="list-group" style="width: 30rem;">
-          <li class="list-group-item">
-            <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant()">remove</button>
-            <button type="button" class="btn btn-primary" onclick="App.courseCreateCertificate()">create certificate</button>  Beppino beppini
-            <span id="createCertificateMsg"></span>
-          </li>
-          <li class="list-group-item">
-            <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant()">remove</button>
-            <button type="button" class="btn btn-primary" onclick="App.courseCreateCertificate()">create certificate</button>  Luigi Telesca
-          </li>
-          <li class="list-group-item">
-            <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant()">remove</button>
-            <button type="button" class="btn btn-primary" onclick="App.courseCreateCertificate()">create certificate</button>  Jhon Tacchinazzi
-          </li>
-        </ul>
-        </div>
-        <h6 class="mt-3">Add partecipant:</h6>
-        <div id="editCourseAdd">
-        <ul class="list-group" style="width: 30rem;">
-          <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Beppino beppini</li>
-          <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Luigi Telesca</li>
-          <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Jhon Tacchinazzi</li>
-        </ul>
-        </div>
-      </div>
-      `;
-    }else{
-      App.displayConnectMetamask();
-    }
-  },
-
   // remove course partecipant
   courseRemovePartecipant: function(){
     if(App.account){
@@ -832,6 +781,7 @@ getCourses: function(userId){
                 </ul>
                 <div class="card-body" id="courseControl">
                   <button class="btn btn-secondary" onclick="App.courseUnsubscribe('`+self_id+`')">Unsubscribe</button>
+                  <button class="btn btn-warning" onclick="App.displayEditCourse('`+self_id+`')">Edit</button>
                 </div>
               </div>
             `;
@@ -847,7 +797,7 @@ getCourses: function(userId){
                 </ul>
                 <div class="card-body" id="courseControl">
                   <button class="btn btn-success" onclick="App.courseSubscribe('`+self_id+`')">Subscribe</button>
-                  <button class="btn btn-warning" onclick="App.displayEditCourse()">Edit</button>
+                  <button class="btn btn-warning" onclick="App.displayEditCourse('`+self_id+`')">Edit</button>
                   <button class="btn btn-danger" onclick="App.deleteCourse('`+self_id+`')">Delete</button>
                 </div>
               </div>
@@ -882,7 +832,7 @@ courseSubscribe: function(course_id){
   if(App.blockchainid != -1){
     user_blockchain_id = App.blockchainid;
 
-    console.log("course_id: "+course_id+" user_blockchain_id: "+user_blockchain_id);
+    //console.log("course_id: "+course_id+" user_blockchain_id: "+user_blockchain_id);
 
     fetch('../api/v1/registrations', {
         method: 'PATCH',
@@ -896,12 +846,54 @@ courseSubscribe: function(course_id){
 },
 
 // unsubscribe to input course
-courseUnsubscribe: function(){
-  if(App.account){
-    App.displayCourses();
-  }else{
-    App.displayConnectMetamask();
+courseUnsubscribe: function(course_id){
+  if(App.blockchainid != -1){
+    user_blockchain_id = App.blockchainid;
+
+    console.log("course_id: "+course_id+" user_blockchain_id: "+user_blockchain_id);
+
+    fetch('../api/v1/unsubscribe', {
+        method: 'PATCH',
+        headers: { 'Content-type': 'application/json; charset=UTF-8'},
+        body: JSON.stringify( { course_id: course_id, user_blockchain_id: user_blockchain_id } ),
+    })
+    .then((resp) => {
+      App.displayCourses();
+    }).catch( error => console.error(error) ); //catch dell'errore
   }
+},
+
+// get the list of users subscribed to the input course
+getSubscribedUsers: function(course_id){
+  const html_subscribed_users = document.getElementById('editCoursePartecipants');
+  var html_text="";
+
+  fetch('../api/v1/courses/'+course_id+'/users')
+  .then((resp) => resp.json()) //trasfor data into JSON
+  .then(function(data) {
+    for (var i = 0; i < data.length; i++){
+      var subscriber = data[i];
+
+      console.log(subscriber);
+
+      let name = subscriber["name"];
+      let surname = subscriber["surname"];
+      let course_self = subscriber["self"];
+      let user_self = subscriber["user"];
+      let user_self_id = user_self.substring(user_self.lastIndexOf('/') + 1);
+
+      html_text += `
+        <li class="list-group-item">
+          <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant()">remove</button>
+          <button type="button" class="btn btn-primary" onclick="App.courseCreateCertificate()">create certificate</button>
+          <span>`+name+` `+surname+`</span>
+          <span id="createCertificateMsg"></span>
+        </li>
+      `;
+    }
+    html_subscribed_users.innerHTML += html_text;
+  })
+  .catch( error => console.error(error) ); //catch dell'errore
 },
 //...
 
@@ -913,6 +905,52 @@ courseUnsubscribe: function(){
 // is not in the team yet
 displayNotInTeam: function(){
   mainContent.innerHTML = `<p>Sorry, you are not in the team yet. Ask the team leader to register yourself.</p>`;
+},
+
+displayEditCourse: function(course_id){
+  if(App.account){
+    mainContent.innerHTML = `
+    <div class="jumbotron">
+      <h2 class="display-4">Edit course</h2>
+      <p class="lead">In this section you can:</p>
+      <ul>
+        <li>add and remove course partecipants</li>
+        <li>send certificate of partecipation</li>
+      </ul>
+      <p class="lead">
+        <button type="button" class="btn btn-link" onclick="App.displayCourses()">Go back to list of courses</button>
+      </p>
+      <hr class="my-4">
+    </div>
+    <div class="container-fluid">
+      <h4>TODO Corso aggiornamento meccanici</h4>
+      <p>TODO <b>date:</b> 2020-02-19</p>
+      <h6 class="mt-3">Partecipants:</h6>
+      
+      <ul class="list-group" style="width: 30rem;">
+      <div id="editCoursePartecipants">
+        <li class="list-group-item">
+          <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant()">remove</button>
+          <button type="button" class="btn btn-primary" onclick="App.courseCreateCertificate()">create certificate</button>  Beppino beppini
+          <span id="createCertificateMsg"></span>
+        </li>
+      </div>
+      </ul>
+      <h6 class="mt-3">Add partecipant:</h6>
+      <div id="editCourseAdd">
+      <ul class="list-group" style="width: 30rem;">
+        <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Beppino beppini</li>
+        <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Luigi Telesca</li>
+        <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Jhon Tacchinazzi</li>
+      </ul>
+      </div>
+    </div>
+    `;
+
+    App.getSubscribedUsers(course_id);
+  }else{
+    App.displayConnectMetamask();
+  }
 },
 
 /**===========*/

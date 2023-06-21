@@ -71,7 +71,7 @@ router.patch('/unsubscribe', async (req, res, next) => {
 
     //Delete user to course subscribers
     let course_id = req.body.course_id;
-    let user_blockchain_id = req.body.user_blockchain_id;
+    let user_blockchain_id = Number(req.body.user_blockchain_id);
 
     const filter = { _id: course_id };
     const update = { $pull: { users: user_blockchain_id  } };
@@ -89,7 +89,7 @@ router.patch('/unsubscribe', async (req, res, next) => {
 
     //Delete course to user list of registrations
     let course_id = req.body.course_id;
-    let user_blockchain_id = req.body.user_blockchain_id;
+    let user_blockchain_id = Number(req.body.user_blockchain_id);
 
     const filter = { blockchain_id: user_blockchain_id };
     const update = { $pull: { courses: course_id  } };
