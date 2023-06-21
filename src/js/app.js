@@ -124,10 +124,17 @@ App = {
               </p>
             </div>
           `;
+
+          // clear error message section
+          errorMsg.innerHTML = ``;
+          
         })
         .catch((error) => {
           console.log(error, error.code);
-          errorMsg.innerHTML = "Unable to access wallet account";
+          errorMsg.innerHTML = `
+            <div class="alert alert-danger" role="alert" style="width: 20%">
+              Unable to access wallet account.
+            </div>`;
         });
     } else {
       //window.open("https://metamask.io/download/", "_blank");
