@@ -73,4 +73,10 @@ contract Eagle {
         require(userAddressToUserId[userWallet]!=0, "you are not a team member");    // the user must be already added in the team
         return userAddressToUserId[userWallet];
     } 
+
+    // Get user wallet of the input id
+    // TODO: this invocation must be used only by the team leader
+    function getUserWallet(uint256 userId) public view returns (address){
+        return userIdToUserAddress[userId];
+    } 
 }

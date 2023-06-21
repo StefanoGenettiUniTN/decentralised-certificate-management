@@ -40,6 +40,7 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
 
     constructor() ERC721("Certificate", "CERT") {}
 
+    // altra funzione
     function safeMint(
                 string memory uri,
                 uint256 _exparationDate,
@@ -48,6 +49,43 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, uri);
+
+        uint256 creationDate = block.timestamp;
+        bool _isValid = true;
+        bool isNonExpiring = _isNonExpiring;
+        uint256 exparationDate = (isNonExpiring) ? 0 : _exparationDate;
+        address creator = msg.sender;
+
+        mintedCertificates[tokenId] = CertificateItem(
+            creationDate,
+            exparationDate,
+            isNonExpiring,
+            creator,
+            _isValid
+        );
+
+        emit CertificateItemCreated(
+            creationDate,
+            exparationDate,
+            isNonExpiring,
+            creator,
+            _isValid
+        );
+
+        emit TokenMinted(tokenId, uri);
+        return tokenId;
+    }
+
+    function safeMintTo(
+                string memory uri,
+                uint256 _exparationDate,
+                bool _isNonExpiring, 
+                address owner
+            ) public returns (uint256) {
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(owner, tokenId);
         _setTokenURI(tokenId, uri);
 
         uint256 creationDate = block.timestamp;
