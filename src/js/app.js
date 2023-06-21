@@ -98,7 +98,7 @@ App = {
         console.log(result);
         mainContent.innerHTML = `
           <br>
-          <div id="certificateList"></div>
+          <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
         `;
         if(result.length>0){
           let token_id;
@@ -131,6 +131,7 @@ App = {
               let issuing_authority = result.issuing_authority;
 
               $("#certificateList").append(`
+                <div class="col mb-4">
                   <div class="card" style="width: 25rem;">
                     <img src="images/defaultCertificateIcon.png" class="card-img-top">
                     <div class="card-body">
@@ -151,6 +152,7 @@ App = {
                       <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`')">Set valid</button>
                     </div>
                   </div>
+                </div>
                 `);            
 
             }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
