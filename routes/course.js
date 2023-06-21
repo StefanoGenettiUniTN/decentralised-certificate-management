@@ -47,6 +47,37 @@ router.get('/courses/:id/users', async (req, res) => {
     res.status(200).json(response);
 });
 
+router.post("/courses", async (req, res) => {
+    try {        
+
+        // get course info
+        var course_title = req.body.title;
+        var course_description = req.body.description;
+        var course_date = req.body.date;
+        var course_users_id = [];
+
+         //Check if course already exists
+        const courseExists = await Course.findOne({title: course_title, date: course_date}).select("name").lean();
+        if (courseExists) {res.status(409).send('course already exists'); return;}
+        
+        var course = new Course({
+            title: course_title,
+            description: course_description,
+            date: course_date,
+            users: course_users_id,
+        });
+
+        await course.save();
+
+        let course_id = course.id;
+            
+        res.status(201).send("OK")  
+        
+    } catch (error) {
+        res.status(400).send('Bad request');
+    }
+});
+
 router.delete('/courses/:id', async (req, res) => {
     let course = await Course.findById(req.params.id).exec();
     if (!course) {
