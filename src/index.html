@@ -47,6 +47,12 @@
       });
     </script>
 
+    <script>
+      // event handlers to handle change of chain or change of account
+      window.ethereum.on('chainChanged', (chainId) => window.location.reload());
+      window.ethereum.on('accountsChanged', (accounts) => window.location.reload());
+    </script>
+
   </head>
   <body>
 
