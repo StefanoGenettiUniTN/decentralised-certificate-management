@@ -21,9 +21,9 @@ App = {
                 <p>Explore the content of the DApp using the navigation bar. For any doubt, do not esitate to contact us!</p>
                 <div class="card" style="width: 30rem;">
                   <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@student.unitn.it</li>
-                    <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@student.unitn.it</li>
-                    <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@student.unitn.it</li>
+                    <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@studenti.unitn.it</li>
+                    <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@studenti.unitn.it</li>
+                    <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@studenti.unitn.it</li>
                   </ul>
                 </div>
               </p>
@@ -116,9 +116,9 @@ App = {
                 <p>Explore the content of the DApp using the navigation bar. For any doubt, do not esitate to contact us!</p>
                 <div class="card" style="width: 30rem;">
                   <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@student.unitn.it</li>
-                    <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@student.unitn.it</li>
-                    <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@student.unitn.it</li>
+                    <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@studenti.unitn.it</li>
+                    <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@studenti.unitn.it</li>
+                    <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@studenti.unitn.it</li>
                   </ul>
                 </div>
               </p>
@@ -974,7 +974,7 @@ getSubscribedUsers: function(course_id){
       html_text += `
         <li class="list-group-item">
           <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant('`+course_id+`', '`+user_self_id+`', 'edit')">remove</button>
-          <button type="button" class="btn btn-primary" onclick="App.displayUploadCertificateForm('`+user_self_id+`')">create certificate</button>
+          <button type="button" class="btn btn-primary" onclick="App.displayUploadCertificateForm('`+user_self_id+`', from='`+course_id+`')">create certificate</button>
           <span>`+name+` `+surname+`</span>
           <span id="createCertificateMsg"></span>
         </li>
@@ -1054,6 +1054,17 @@ courseAddPartecipant: async function(course_id, blockchain_id, page=undefined){
 }, 
 //...
 
+// get information about a single course
+getCourseInfo: async function(courseId){
+  return fetch('../api/v1/courses/'+courseId)
+  .then((resp) => resp.json()) //transform data into JSON
+  .then(function(course) {
+      return course;
+  })
+  .catch( error => console.error(error) ); //catch dell'errore
+},
+//...
+
 /**===========*/
 
 /**===VIEW===*/
@@ -1080,8 +1091,8 @@ displayEditCourse: function(course_id){
       <hr class="my-4">
     </div>
     <div class="container-fluid">
-      <h4>TODO Corso aggiornamento meccanici</h4>
-      <p>TODO <b>date:</b> 2020-02-19</p>
+      <h4 id="edit-course-title"></h4>
+      <p><b>date: </b><span id="edit-course-date"></span></p>
 
       <h6 class="mt-3">Partecipants:</h6>
       <ul class="list-group" style="width: 30rem;">
@@ -1097,6 +1108,18 @@ displayEditCourse: function(course_id){
     </div>
     `;
 
+    App.getCourseInfo(course_id).then(function(courseInfo) {
+      let title = courseInfo["title"];
+      let description = courseInfo["description"];
+      let self = courseInfo["self"];
+      let date = courseInfo["date"].split('T')[0];
+      let users = courseInfo["users"];
+      let self_id = self.substring(self.lastIndexOf('/') + 1);
+
+      document.getElementById("edit-course-title").innerText = title;
+      document.getElementById("edit-course-date").innerText = date;
+
+    });
     App.getSubscribedUsers(course_id);
     App.getUnsubscribedUsers(course_id)
   }else{
@@ -1106,63 +1129,67 @@ displayEditCourse: function(course_id){
 
 // Page: upload certificate
 // load the user interface
-displayUploadCertificateForm: async function(owner=undefined){
+displayUploadCertificateForm: async function(owner=undefined, from=undefined){
   if(App.account){
     mainContent.innerHTML = `
-      <h1 class="display-4 mb-4">Upload a certificate</h1> 
-      <div class="col-sm-6">
-        <div class="input-group mb-3">
-          <span class="input-group-text">Title</span>
-          <input type="text" class="upload-form form-control" id="certificate-name" placeholder="...insert title" required>
-        </div>
-        <div class="input-group mb-3">
-          <span class="input-group-text">Description</span>
-          <textarea class="upload-form form-control" id="certificate-description" required></textarea>
-        </div>
-        <div class="input-group mb-3">
-          <input class="upload-form form-control" type="file" id="file-input" accept="application/pdf" required>
-        </div>
-        <div class="input-group mb-3">
-          <label class="input-group-text">Category</label>
-          <select class="upload-form form-select" id="certificate-category" required>
-            <option value="DFLT">DFLT</option>
-            <option value="FRMZ">FRMZ</option>
-            <option value="SECU">SECU</option>
-            <option value="WELL">WELL</option>
-            <option value="CURR">CURR</option>
-            <option value="LANG">LANG</option>
-          </select>
-        </div>
-        <div class="input-group mb-3">
-          <span class="input-group-text">Achievement date</span>
-          <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-achievement" required>
-        </div>
-        <div class="input-group mb-3">
-          <span class="input-group-text">Expiration</span>
-          <select class="upload-form form-select" id="certificate-expiration" onchange="toggleInputField()" required>
-            <option value="NOTINF">Limited duration</option>
-            <option value="INF">Unlimited duration</option>
-          </select>
-        </div>
-        <span id="input-certificate-expiration-date">
-          <div class="input-group mb-3">
-            <span class="input-group-text">Expiration date</span>
-            <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-expiration-date" required>
-          </div>
-        </span>
-        <div class="input-group mb-3">
-          <span class="input-group-text">Issuing authority</span>
-          <input type="text" class="upload-form form-control" id="certificate-authority" required>
-        </div>
-        <div class="input-group mb-3">
-          <span class="input-group-text">Owner address</span>
-          <input type="text" class="upload-form form-control" id="certificate-owner" placeholder="Owner" required readonly>
-        </div>
-        <button type="button" class="btn btn-primary mb-4" onclick="App.uploadCertificate()" id="btn-upload">Upload</button>
-        <br>
-        <div id="upload-result" class="invisible alert" role="alert" style="width: 30rem;">
-        </div> 
+    <div class="jumbotron">
+      <h2 class="display-4">Upload certificate</h2>
+      <span id="upload-certificate-form-goback"></span>
+      <hr class="my-4">
+    </div>
+    <div class="col-sm-6">
+      <div class="input-group mb-3">
+        <span class="input-group-text">Title</span>
+        <input type="text" class="upload-form form-control" id="certificate-name" placeholder="...insert title" required>
       </div>
+      <div class="input-group mb-3">
+        <span class="input-group-text">Description</span>
+        <textarea class="upload-form form-control" id="certificate-description" required></textarea>
+      </div>
+      <div class="input-group mb-3">
+        <input class="upload-form form-control" type="file" id="file-input" accept="application/pdf" required>
+      </div>
+      <div class="input-group mb-3">
+        <label class="input-group-text">Category</label>
+        <select class="upload-form form-select" id="certificate-category" required>
+          <option value="DFLT">DFLT</option>
+          <option value="FRMZ">FRMZ</option>
+          <option value="SECU">SECU</option>
+          <option value="WELL">WELL</option>
+          <option value="CURR">CURR</option>
+          <option value="LANG">LANG</option>
+        </select>
+      </div>
+      <div class="input-group mb-3">
+        <span class="input-group-text">Achievement date</span>
+        <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-achievement" required>
+      </div>
+      <div class="input-group mb-3">
+        <span class="input-group-text">Expiration</span>
+        <select class="upload-form form-select" id="certificate-expiration" onchange="toggleInputField()" required>
+          <option value="NOTINF">Limited duration</option>
+          <option value="INF">Unlimited duration</option>
+        </select>
+      </div>
+      <span id="input-certificate-expiration-date">
+        <div class="input-group mb-3">
+          <span class="input-group-text">Expiration date</span>
+          <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-expiration-date" required>
+        </div>
+      </span>
+      <div class="input-group mb-3">
+        <span class="input-group-text">Issuing authority</span>
+        <input type="text" class="upload-form form-control" id="certificate-authority" required>
+      </div>
+      <div class="input-group mb-3">
+        <span class="input-group-text">Owner address</span>
+        <input type="text" class="upload-form form-control" id="certificate-owner" placeholder="Owner" required readonly>
+      </div>
+      <button type="button" class="btn btn-primary mb-4" onclick="App.uploadCertificate()" id="btn-upload">Upload</button>
+      <br>
+      <div id="upload-result" class="invisible alert" role="alert" style="width: 30rem;">
+      </div> 
+    </div>
     `;
     
     // get id if owner not specified --> it happens when the user clicks on the
@@ -1181,6 +1208,14 @@ displayUploadCertificateForm: async function(owner=undefined){
 
     var wallet = await App.getWalletFromId(owner);  //get wallet address from user blockchain id     
     $('#certificate-owner').val(wallet);
+
+    if(from){ // from = course title from which we create the current certificate
+      document.getElementById("upload-certificate-form-goback").innerHTML = `
+      <p class="lead">
+        <button type="button" class="btn btn-link" onclick="App.displayEditCourse('`+from+`')">Go back to edit course page</button>
+      </p>`;
+    }
+
   }else{ // If wallet is not connected
     App.displayConnectMetamask();
   }

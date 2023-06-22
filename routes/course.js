@@ -18,6 +18,24 @@ router.get('/courses', async (req, res) => {
     res.status(200).json(response);
 });
 
+router.get('/courses/:id', async (req, res) => {
+    let course = await Course.findOne({'_id':req.params.id});
+
+    if (!course) {
+        res.status(404).json({status: "error"})
+        return;
+    }
+
+    let response = {
+        self: "/api/v1/courses/" + course.id,
+        title: course.title,
+        description: course.description,
+        date: course.date,
+        users: course.users
+    };
+    res.status(200).json(response);
+});
+
 router.get('/courses/:id/users', async (req, res) => {
 
     if(!mongoose.Types.ObjectId.isValid(req.params.id)){
