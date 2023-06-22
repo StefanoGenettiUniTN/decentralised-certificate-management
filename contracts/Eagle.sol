@@ -11,7 +11,7 @@ contract Eagle {
     Counters.Counter private _certificateItemId;
     Counters.Counter private _userItemId;
 
-    enum Role{ TEAM_LEADER, STANDARD}
+    enum Role{ UNKNOWN, TEAM_LEADER, STANDARD}
 
     address private administrator;
 
@@ -64,11 +64,10 @@ contract Eagle {
 
     // Get specific member role
     function getMemberRole(address userWallet) public view returns (string memory){
-        string memory result = "";
         Role userRole = userAddressToRole[userWallet];
-        if (Role.TEAM_LEADER == userRole) result = "Team Leader";
-        if (Role.STANDARD == userRole) result = "Standard user";
-        return result;
+        if (Role.TEAM_LEADER == userRole) return "tl";
+        if (Role.STANDARD == userRole) return "std";
+        return "unknown";   // TODO require userAddressToRole settato per potere eseguire. Questo TODO è possibile solo quando sapremo come configurare il tl la prima volta
     }
 
     // Get user id of the sender

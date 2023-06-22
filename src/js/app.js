@@ -1,8 +1,11 @@
 App = {
-  web3Provider: null,
-  account: null,
-  contracts: {},
-  blockchainid: -1,
+  web3Provider: null,   // web3 provider
+  account: null,        // wallet address
+  contracts: {},        // dapp smart contracts
+  blockchainid: -1,     // user blockchain integer identifier
+  role: null,           // user role in the system:
+                        //  tl  ::  team leader
+                        //  std ::  standard user 
 
   init: function() {
     console.log("Initialization function")
@@ -61,15 +64,15 @@ App = {
         console.error("User denied account access");
       }
       web3 = new Web3(App.web3Provider);
-      App.initContracts();
+      await App.initContracts();
     }else{
       alert("error metamask is required");
     }
   },
 
-  initContracts: function() {
+  initContracts: async function() {
     //Certificate smart contract
-    $.getJSON("Certificate.json", function(data){
+    await $.getJSON("Certificate.json", function(data){
       //Get the necessary contract artifact file and instantiate it with @truffle/contract
       var CertificateArtifact = data;
       App.contracts.Certificate = TruffleContract(CertificateArtifact); //this creates an instance of the contract we can interact with
@@ -81,7 +84,7 @@ App = {
     console.log("Certificate smart contract loaded.");
     
     //Eagle smart contract
-    $.getJSON("Eagle.json", function(data){
+    await $.getJSON("Eagle.json", function(data){
       //Get the necessary contract artifact file and instantiate it with @truffle/contract
       var EagleArtifact = data;
       App.contracts.Eagle = TruffleContract(EagleArtifact); //this creates an instance of the contract we can interact with
@@ -97,10 +100,10 @@ App = {
   connectMetamask: function(){
     if (typeof window.ethereum !== "undefined") {
       ethereum.request({ method: "eth_requestAccounts" })
-        .then((accounts) => {
+        .then(async (accounts) => {
           App.account = accounts[0];
 
-          App.initWeb3();
+          await App.initWeb3();
 
           mainContent.innerHTML = `
             <div class="jumbotron">
@@ -128,6 +131,17 @@ App = {
           // clear error message section
           errorMsg.innerHTML = ``;
 
+        })
+        .then( () => {
+          App.contracts.Eagle.deployed().then(function(instance){
+            return instance.getMemberRole(App.account);       
+          }).then(function(result){
+            App.role = result;
+            console.log("account role: "+App.role);
+          }).catch(function(err){
+            console.log("error:")
+            console.log(err.message);
+          });
         })
         .catch((error) => {
           console.log(error, error.code);
@@ -339,8 +353,8 @@ App = {
       let instance = await App.contracts.Eagle.deployed()
       try {
         // get account role
-        let contractRole = await instance.getMemberRole(App.account);
-        if(contractRole === "Team Leader"){
+        let contractRole = App.role;
+        if(contractRole === "tl"){
           role = "You are the <strong>team leader</strong>";
         } else {
           role = "You are <b>not</b> the team leader";
@@ -576,8 +590,8 @@ App = {
         <input type="text" id="memberAddress" name="memberAddress"><br>
         <label for="memberRole">What is its role?</label><br>
         <select id="memberRole" size="2">
-          <option value="0">Team leader</option>
-          <option value="1">Standard</option>
+          <option value="1">Team leader</option>
+          <option value="2">Standard</option>
         </select><br>
         <button onclick="App.addTeamMember()">Add</button>
         <hr>
