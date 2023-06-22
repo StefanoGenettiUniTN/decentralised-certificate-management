@@ -127,7 +127,7 @@ App = {
 
           // clear error message section
           errorMsg.innerHTML = ``;
-          
+
         })
         .catch((error) => {
           console.log(error, error.code);
@@ -753,12 +753,13 @@ App = {
 
   // Invalidate NFT
   invalidateNFT: function(tokenId){
-    App.contracts.Certificate.deployed().then(async function(instance){
-      CertificateInstance = instance;
+    console.log("test: "+tokenId);
+    App.contracts.Eagle.deployed().then(async function(instance){
+      EagleInstance = instance;
 
       try {
         if(confirm("Are you sure to set the certificate not valid?")){        
-          let result = await CertificateInstance.setCertificateNotValid(tokenId, {from: App.account});
+          let result = await EagleInstance.setCertificateNotValid(tokenId, {from: App.account});
         }
         App.displayCertificates();
       }catch(err){
@@ -777,12 +778,12 @@ App = {
 
     console.log("validate "+tokenId);
 
-    App.contracts.Certificate.deployed().then(async function(instance){
-      CertificateInstance = instance;
+    App.contracts.Eagle.deployed().then(async function(instance){
+      EagleInstance = instance;
 
       try {
         if(confirm("Are you sure to set the certificate valid?")){        
-          let result = await CertificateInstance.setCertificateValid(tokenId, {from: App.account});
+          let result = await EagleInstance.setCertificateValid(tokenId, {from: App.account});
         }
         App.displayCertificates();
       }catch(err){
