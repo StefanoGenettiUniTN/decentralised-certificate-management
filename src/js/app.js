@@ -220,49 +220,91 @@ App = {
     }
   },
 
-  // Page: upload certificate
-  // load the user interface
-  displayUploadCertificateForm: function(){
-    if(App.account){
-      mainContent.innerHTML = `
-        <br>
-        <label for="cert_uri"><b>File URI: </b></label>
-        <input type="text" id="cert_uri" placeholder="URI"/><br>
-        <label for="cert_expdate"><b>Expiration date: </b></label>
-        <input type="date" id="cert_expdate" placeholder="URI"/><br>
-        <label for="cert_noexpdate"><b>Unlimited duration: </b></label>
-        <input id="cert_noexpdate" type="checkbox" /><br>
-        <button onclick="App.mintNFT()">CREATE</button>
-      `;
-    }else{
-      App.displayConnectMetamask();
+  uploadCertificate: function() {    
+
+    // Check if all required inputs field have been compiled
+    var valid = true;
+    var inputs = document.getElementsByClassName("upload-form");
+
+    for (let i = inputs.length-1; i >= 0; i--) { //descending for to make validation start from the first input
+      if (!inputs[i].reportValidity()) {
+        valid = false;        
+      }      
+    }
+    
+    if(valid) {           
+      //Get all the information
+      const name = $('#certificate-name').val();
+      const description = $('#certificate-description').val();
+      const category = $('#certificate-category').val();
+      const issuing_authority = $('#certificate-authority').val();
+      const date_achievement = $('#certificate-achievement').val();
+      const date_expiration = $('#certificate-expiration').val();  
+      const owner = $('#certificate-owner').val();    
+      
+      // Get the file data
+      const fileInput = $('#file-input')[0];
+      const file = fileInput.files[0];     
+      
+      // Create a new FormData object
+      const formData = new FormData();
+      
+      // Append the file to the FormData object        
+      formData.append('file', file);
+      formData.append('name', name)
+      formData.append('description', description)
+      formData.append('category', category)
+      formData.append('date_achievement', date_achievement)
+      formData.append('date_expiration', date_expiration)
+      formData.append('issuing_authority', issuing_authority)        
+
+      // Send the file to the server
+      fetch('../api/v1/add-certificate', {
+        method: 'POST',
+        body: formData
+      })     
+      .then(response => response.json()) 
+      .then(async data => {
+
+        // Handle the server response
+        mint = await App.mintNFT(data.IpfsHash, date_expiration, owner);
+
+        //show the result alert
+        resultAlert = $("#upload-result");
+        resultAlert.removeClass();
+        resultAlert.addClass("alert")
+
+        if(mint) {
+          resultAlert.addClass("alert-success")
+          resultAlert.text("The certificate has been uploaded")
+        } else {
+          resultAlert.addClass("alert-danger")
+          resultAlert.text("An error occured while uploading the certificate")
+        }
+      })
+      .catch(error => {
+        // Handle any errors
+        console.error(error);
+      });
     }
   },
 
   // create new certificate
-  mintNFT: async function(){
-    let uri = $("#cert_uri").val();
-    let expiration_date = $("#cert_expdate").val();
-    let expiration_date_epoch = Math.floor(new Date(expiration_date).getTime() / 1000);
-    let unlimited_duration = $('#cert_noexpdate').is(':checked')
+  mintNFT: async function(cert_uri, date_expiration, owner){
+    
+    let expiration_date_epoch = Math.floor(new Date(date_expiration).getTime() / 1000);
+    //let unlimited_duration = $('#cert_noexpdate').is(':checked')
+    let unlimited_duration = false;
 
-    console.log("uri");
-    console.log(uri);
-    console.log("expiration_date");
-    console.log(expiration_date);
-    console.log("expiration_date_epoch");
-    console.log(expiration_date_epoch);
-    console.log("unlimited_duration");
-    console.log(unlimited_duration);
-
-    App.contracts.Certificate.deployed().then(async function(instance){
+    await App.contracts.Certificate.deployed().then(async function(instance){
       certificateInstance = instance;
+      minted = true //return value, if no errors occur = true
 
       try {
         // Call the mintToken smart contract function to issue a new token
         // to the given address. This returns a transaction object, but the 
         // transaction hasn't been confirmed yet, so it doesn't have our token id.      
-        const result = await certificateInstance.safeMint(uri, expiration_date_epoch, unlimited_duration, {from: App.account});
+        const result = await certificateInstance.safeMintTo(cert_uri, expiration_date_epoch, unlimited_duration, owner, {from: App.account});
 
         // The OpenZeppelin base ERC721 contract emits a Transfer event 
         // when a token is issued.
@@ -271,16 +313,21 @@ App = {
               console.log(response.args.tokenId.toString());
           }else{
               console.log(error);
+              minted = false;
           }
         });
       }catch(err){
         console.log("error:")
         console.log(err);
+        minted = false;
       }
     }).catch(function(err){
       console.log("error:")
       console.log(err.message);
+      minted = false;
     });
+
+    return minted
   },
 
   // display profile
@@ -678,26 +725,8 @@ App = {
     
   },
   
-  // remove course partecipant
-  courseRemovePartecipant: function(){
-    if(App.account){
-      App.displayEditCourse();
-    }else{
-      App.displayConnectMetamask();
-    }
-  }, 
-
-  // add course partecipant
-  courseAddPartecipant: function(){
-    if(App.account){
-      App.displayEditCourse();
-    }else{
-      App.displayConnectMetamask();
-    }
-  }, 
-
   // create the certificate for the partecipant
-  courseCreateCertificate: function(){
+  courseCreateCertificate: function(course_id, blockchain_id, page){
     if(App.account){
       $("#createCertificateMsg").html(`
         <div class="alert alert-success my-2" role="alert">NFT certificate successfully created!</div>`
@@ -798,6 +827,23 @@ App = {
   },
 
  /**===MODEL===*/
+
+ // query the blockchain to get the wallet address
+ // associated with the input blockchain_id
+getWalletFromId: async function(blockchain_id) {    
+  var wallet = -1;
+  let eagleContractInstance = await App.contracts.Eagle.deployed();     
+  await eagleContractInstance.getUserWallet(blockchain_id).then(function (result) {
+    wallet = result;
+  }).catch(function(err){
+    console.log("error:")
+    console.log(err.message);
+  });
+
+  return wallet;    
+},
+
+
 //Get all courses
 getCourses: function(userId){
   const html_courses = document.getElementById('output_courses');
@@ -834,7 +880,7 @@ getCourses: function(userId){
                   <li class="list-group-item"><b>Date: </b>`+date+`</li>
                 </ul>
                 <div class="card-body" id="courseControl">
-                  <button class="btn btn-secondary" onclick="App.courseUnsubscribe('`+self_id+`')">Unsubscribe</button>
+                  <button class="btn btn-secondary" onclick="App.courseRemovePartecipant('`+self_id+`', '`+App.blockchainid+`')">Unsubscribe</button>
                   <button class="btn btn-warning" onclick="App.displayEditCourse('`+self_id+`')">Edit</button>
                 </div>
               </div>
@@ -850,7 +896,7 @@ getCourses: function(userId){
                   <li class="list-group-item"><b>Date: </b>`+date+`</li>
                 </ul>
                 <div class="card-body" id="courseControl">
-                  <button class="btn btn-success" onclick="App.courseSubscribe('`+self_id+`')">Subscribe</button>
+                  <button class="btn btn-success" onclick="App.courseAddPartecipant('`+self_id+`', '`+App.blockchainid+`')">Subscribe</button>
                   <button class="btn btn-warning" onclick="App.displayEditCourse('`+self_id+`')">Edit</button>
                   <button class="btn btn-danger" onclick="App.deleteCourse('`+self_id+`')">Delete</button>
                 </div>
@@ -882,38 +928,28 @@ deleteCourse: function(courseId){
 },
 
 // subscribe to input course
-courseSubscribe: function(course_id){
-  if(App.blockchainid != -1){
-    user_blockchain_id = App.blockchainid;
-
+courseSubscribe: async function(course_id, blockchain_id){
+  if(blockchain_id != -1){
     //console.log("course_id: "+course_id+" user_blockchain_id: "+user_blockchain_id);
-
-    fetch('../api/v1/registrations', {
+    await fetch('../api/v1/registrations', {
         method: 'PATCH',
         headers: { 'Content-type': 'application/json; charset=UTF-8'},
-        body: JSON.stringify( { course_id: course_id, user_blockchain_id: user_blockchain_id } ),
+        body: JSON.stringify( { course_id: course_id, user_blockchain_id: blockchain_id} ),
     })
-    .then((resp) => {
-      App.displayCourses();
-    }).catch( error => console.error(error) ); //catch dell'errore
+    .catch( error => console.error(error) ); //catch dell'errore
   }
 },
 
 // unsubscribe to input course
-courseUnsubscribe: function(course_id){
-  if(App.blockchainid != -1){
-    user_blockchain_id = App.blockchainid;
-
-    console.log("course_id: "+course_id+" user_blockchain_id: "+user_blockchain_id);
-
-    fetch('../api/v1/unsubscribe', {
+courseUnsubscribe: async function(course_id, blockchain_id){
+  if(blockchain_id != -1){    
+    //console.log("course_id: "+course_id+" user_blockchain_id: "+blockchain_id);
+    await fetch('../api/v1/unsubscribe', {
         method: 'PATCH',
         headers: { 'Content-type': 'application/json; charset=UTF-8'},
-        body: JSON.stringify( { course_id: course_id, user_blockchain_id: user_blockchain_id } ),
+        body: JSON.stringify( { course_id: course_id, user_blockchain_id: blockchain_id } ),
     })
-    .then((resp) => {
-      App.displayCourses();
-    }).catch( error => console.error(error) ); //catch dell'errore
+    .catch( error => console.error(error) ); //catch dell'errore
   }
 },
 
@@ -923,12 +959,11 @@ getSubscribedUsers: function(course_id){
   var html_text="";
 
   fetch('../api/v1/courses/'+course_id+'/users')
-  .then((resp) => resp.json()) //trasfor data into JSON
+  .then((resp) => resp.json()) //transform data into JSON
   .then(function(data) {
+    console.log(data)
     for (var i = 0; i < data.length; i++){
       var subscriber = data[i];
-
-      console.log(subscriber);
 
       let name = subscriber["name"];
       let surname = subscriber["surname"];
@@ -938,8 +973,8 @@ getSubscribedUsers: function(course_id){
 
       html_text += `
         <li class="list-group-item">
-          <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant()">remove</button>
-          <button type="button" class="btn btn-primary" onclick="App.courseCreateCertificate()">create certificate</button>
+          <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant('`+course_id+`', '`+user_self_id+`', 'edit')">remove</button>
+          <button type="button" class="btn btn-primary" onclick="App.displayUploadCertificateForm('`+user_self_id+`')">create certificate</button>
           <span>`+name+` `+surname+`</span>
           <span id="createCertificateMsg"></span>
         </li>
@@ -949,6 +984,74 @@ getSubscribedUsers: function(course_id){
   })
   .catch( error => console.error(error) ); //catch dell'errore
 },
+
+getUnsubscribedUsers: function(course_id){
+  const html_unsubscribed_users = document.getElementById('editCourseAdd');
+  var html_text="";
+
+  fetch('../api/v1/users')
+  .then((resp) => resp.json()) //transform data into JSON
+  .then(function(data) {
+    console.log(data)
+    for (var i = 0; i < data.length; i++){
+      var subscriber = data[i];
+      
+      // Get user info
+      let name = subscriber["name"];
+      let surname = subscriber["surname"];
+      let courses = subscriber["courses"]
+      let user_self = subscriber["self"];
+      let user_self_id = user_self.substring(user_self.lastIndexOf('/') + 1);
+
+      // Check if user is subscribed to the course, if not add it to the list
+      if(!courses || !courses.includes(course_id)) {
+        html_text += `
+        <li class="list-group-item">
+          <button type="button" class="btn btn-info" onclick="App.courseAddPartecipant('`+course_id+`', '`+user_self_id+`', 'edit')">add</button>
+          <span>`+name+` `+surname+`</span>
+          <span id="createCertificateMsg"></span>
+        </li>
+      `;
+      }      
+    }
+    html_unsubscribed_users.innerHTML += html_text;
+  })
+  .catch( error => console.error(error) ); //catch dell'errore
+},
+
+// remove course partecipant
+courseRemovePartecipant: async function(course_id, blockchain_id, page=undefined){
+  if(App.account){
+    // Update the members subscribed to the course
+    await App.courseUnsubscribe(course_id, blockchain_id)
+
+    // Redirect to the right page
+    if(page == "edit"){
+      App.displayEditCourse(course_id);
+    }
+    else{ 
+      App.displayCourses();
+    }
+  }else{
+    App.displayConnectMetamask();
+  }
+}, 
+
+// add course partecipant
+courseAddPartecipant: async function(course_id, blockchain_id, page=undefined){
+  if(App.account){
+    // Update the members subscribed to the course
+    await App.courseSubscribe(course_id, blockchain_id)
+
+    // Redirect to the right page
+    if(page == "edit")
+      App.displayEditCourse(course_id);
+    else 
+      App.displayCourses();
+  }else{
+    App.displayConnectMetamask();
+  }
+}, 
 //...
 
 /**===========*/
@@ -979,30 +1082,97 @@ displayEditCourse: function(course_id){
     <div class="container-fluid">
       <h4>TODO Corso aggiornamento meccanici</h4>
       <p>TODO <b>date:</b> 2020-02-19</p>
+
       <h6 class="mt-3">Partecipants:</h6>
-      
       <ul class="list-group" style="width: 30rem;">
       <div id="editCoursePartecipants">
-        <li class="list-group-item">
-          <button type="button" class="btn btn-secondary" onclick="App.courseRemovePartecipant()">remove</button>
-          <button type="button" class="btn btn-primary" onclick="App.courseCreateCertificate()">create certificate</button>  Beppino beppini
-          <span id="createCertificateMsg"></span>
-        </li>
       </div>
       </ul>
+
       <h6 class="mt-3">Add partecipant:</h6>
-      <div id="editCourseAdd">
       <ul class="list-group" style="width: 30rem;">
-        <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Beppino beppini</li>
-        <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Luigi Telesca</li>
-        <li class="list-group-item"><button type="button" class="btn btn-info" onclick="App.courseAddPartecipant()">add</button>  Jhon Tacchinazzi</li>
-      </ul>
+      <div id="editCourseAdd">        
       </div>
+      </ul>
     </div>
     `;
 
     App.getSubscribedUsers(course_id);
+    App.getUnsubscribedUsers(course_id)
   }else{
+    App.displayConnectMetamask();
+  }
+},
+
+// Page: upload certificate
+// load the user interface
+displayUploadCertificateForm: async function(owner=undefined){
+  if(App.account){
+    mainContent.innerHTML = `
+      <h1 class="display-4 mb-4">Upload a certificate</h1> 
+      <div class="col-sm-6">
+        <div class="input-group mb-3">
+          <span class="input-group-text">Title</span>
+          <input type="text" class="upload-form form-control" id="certificate-name" placeholder="...insert title" required>
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">Description</span>
+          <textarea class="upload-form form-control" id="certificate-description" required></textarea>
+        </div>
+        <div class="input-group mb-3">
+          <input class="upload-form form-control" type="file" id="file-input" accept="application/pdf" required>
+        </div>
+        <div class="input-group mb-3">
+          <label class="input-group-text">Category</label>
+          <select class="upload-form form-select" id="certificate-category" required>
+            <option value="DFLT">DFLT</option>
+            <option value="FRMZ">FRMZ</option>
+            <option value="SECU">SECU</option>
+            <option value="WELL">WELL</option>
+            <option value="CURR">CURR</option>
+            <option value="LANG">LANG</option>
+          </select>
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">Achievement date</span>
+          <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-achievement" required>
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">Expiration date</span>
+          <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-expiration" required>
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">Issuing authority</span>
+          <input type="text" class="upload-form form-control" id="certificate-authority" required>
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">Owner address</span>
+          <input type="text" class="upload-form form-control" id="certificate-owner" placeholder="Owner" required>
+        </div>
+        <button type="button" class="btn btn-primary mb-4" onclick="App.uploadCertificate()" id="btn-upload">Upload</button>
+        <br>
+        <div id="upload-result" class="invisible alert" role="alert" style="width: 30rem;">
+        </div> 
+      </div>
+    `;
+    
+    // get id if owner not specified --> it happens when the user clicks on the
+    // upload certificate title in the nav bar
+    if(owner == undefined) {
+      if(App.blockchainid==-1){
+        let result = await App.setBlockchainId();  // check if the user is in the team
+        if(result==-1){
+          console.log("you are not part of the team");
+          App.displayNotInTeam();
+          return;
+        }
+      }
+      owner = App.blockchainid;
+    }
+
+    var wallet = await App.getWalletFromId(owner);  //get wallet address from user blockchain id     
+    $('#certificate-owner').val(wallet);
+  }else{ // If wallet is not connected
     App.displayConnectMetamask();
   }
 },
@@ -1017,12 +1187,11 @@ displayEditCourse: function(course_id){
 // If this is the case an alert is displayed and App.blockchainid is set
 // to -1.
 setBlockchainId: async function (){
-  console.log("app set blockchainid");
   let result = await App.contracts.Eagle.deployed().then(async function(instance){
     EagleInstance = instance;
     try {
       let result = await EagleInstance.getMyUserId({from: App.account});
-      App.blockchainid = result;
+      App.blockchainid = result.toNumber();
     }catch(err){
       return -1;
     }
