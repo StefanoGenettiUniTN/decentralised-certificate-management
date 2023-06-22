@@ -38,12 +38,6 @@
         $(window).load(function() {
           App.init();
         });
-        $("#mainContent").on('DOMSubtreeModified', function(){
-          $('#spinnerwrapper').show();
-          setTimeout(() => {
-            $('#spinnerwrapper').hide();
-          }, 1000);
-        });
       });
     </script>
 
@@ -95,6 +89,7 @@
             </li>
         </ul>
         </div>
+        <div id="accountaddress" class="container-fluid d-flex justify-content-end"></div>
     </nav>
 
     <div class="container-fluid", style="padding-top: 70px;">
@@ -109,5 +104,10 @@
         <div id="errorMsg"></div>
     </div>
 
+    <footer class="bg-light text-center text-lg-start py-3 fixed-bottom">
+      <div class="container">
+        <span class="text-muted">Authors: Eros Rigaba, Stefano Genetti, Pietro Fronza</span>
+      </div>
+    </footer>
   </body>
 </html>
