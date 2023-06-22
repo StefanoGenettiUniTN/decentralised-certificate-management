@@ -27,9 +27,9 @@ router.post('/add-certificate', upload.single('file'), async (req, res) => {
       var date_achievement = req.body.date_achievement;
       var date_expiration = req.body.date_expiration;
       var issuing_authority = req.body.issuing_authority;
-      pinataFileRes = await uploadFile(fileName, fileBuffer)
-      pinataJsonRes = await uploadJson(pinataFileRes.data.IpfsHash, name, description, category, date_achievement, date_expiration, issuing_authority)
-      res.status(201).json(pinataJsonRes.data)  
+      pinataFileRes = await uploadFile(fileName, fileBuffer);
+      pinataJsonRes = await uploadJson(pinataFileRes.data.IpfsHash, name, description, category, date_achievement, date_expiration, issuing_authority);
+      res.status(201).json(pinataJsonRes.data);
       
     } catch (error) {
       res.status(400);

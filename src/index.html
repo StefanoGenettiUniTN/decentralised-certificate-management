@@ -53,6 +53,25 @@
       window.ethereum.on('accountsChanged', (accounts) => window.location.reload());
     </script>
 
+    <script>
+      /**utils*/
+      function toggleInputField() {
+        var selectElement = document.getElementById("certificate-expiration");
+        var inputContainer = document.getElementById("input-certificate-expiration-date");
+
+        if (selectElement.value === "INF") {
+          inputContainer.innerHTML = ``;
+        } else {
+          inputContainer.innerHTML = `
+          <div class="input-group mb-3">
+            <span class="input-group-text">Expiration date</span>
+            <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-expiration-date" required>
+          </div>`;
+        }
+      }
+      /**---*/
+    </script>
+
   </head>
   <body>
 

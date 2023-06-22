@@ -239,9 +239,11 @@ App = {
       const category = $('#certificate-category').val();
       const issuing_authority = $('#certificate-authority').val();
       const date_achievement = $('#certificate-achievement').val();
-      const date_expiration = $('#certificate-expiration').val();  
+      const expiration_flag = $('#certificate-expiration').val(); 
+      const unlimited_duration = (expiration_flag == 'INF') ? true : false;
+      const date_expiration = $('#certificate-expiration-date').val();  
       const owner = $('#certificate-owner').val();    
-      
+
       // Get the file data
       const fileInput = $('#file-input')[0];
       const file = fileInput.files[0];     
@@ -251,12 +253,12 @@ App = {
       
       // Append the file to the FormData object        
       formData.append('file', file);
-      formData.append('name', name)
-      formData.append('description', description)
-      formData.append('category', category)
-      formData.append('date_achievement', date_achievement)
-      formData.append('date_expiration', date_expiration)
-      formData.append('issuing_authority', issuing_authority)        
+      formData.append('name', name);
+      formData.append('description', description);
+      formData.append('category', category);
+      formData.append('date_achievement', date_achievement);
+      formData.append('date_expiration', date_expiration);
+      formData.append('issuing_authority', issuing_authority);        
 
       // Send the file to the server
       fetch('../api/v1/add-certificate', {
@@ -267,7 +269,7 @@ App = {
       .then(async data => {
 
         // Handle the server response
-        mint = await App.mintNFT(data.IpfsHash, date_expiration, owner);
+        mint = await App.mintNFT(data.IpfsHash, date_expiration, unlimited_duration, owner);
 
         //show the result alert
         resultAlert = $("#upload-result");
@@ -290,11 +292,9 @@ App = {
   },
 
   // create new certificate
-  mintNFT: async function(cert_uri, date_expiration, owner){
+  mintNFT: async function(cert_uri, date_expiration, unlimited_duration, owner){
     
     let expiration_date_epoch = Math.floor(new Date(date_expiration).getTime() / 1000);
-    //let unlimited_duration = $('#cert_noexpdate').is(':checked')
-    let unlimited_duration = false;
 
     await App.contracts.Certificate.deployed().then(async function(instance){
       certificateInstance = instance;
@@ -551,9 +551,9 @@ App = {
                 Please, refer to the following references to contact us. We are eager to hear your requests!
             </div>
             <ul class="list-group list-group-flush">
-              <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@student.unitn.it</li>
-              <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@student.unitn.it</li>
-              <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@student.unitn.it</li>
+              <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@studenti.unitn.it</li>
+              <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@studenti.unitn.it</li>
+              <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@studenti.unitn.it</li>
             </ul>
           </div>
         </div>
@@ -1138,16 +1138,25 @@ displayUploadCertificateForm: async function(owner=undefined){
           <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-achievement" required>
         </div>
         <div class="input-group mb-3">
-          <span class="input-group-text">Expiration date</span>
-          <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-expiration" required>
+          <span class="input-group-text">Expiration</span>
+          <select class="upload-form form-select" id="certificate-expiration" onchange="toggleInputField()" required>
+            <option value="NOTINF">Limited duration</option>
+            <option value="INF">Unlimited duration</option>
+          </select>
         </div>
+        <span id="input-certificate-expiration-date">
+          <div class="input-group mb-3">
+            <span class="input-group-text">Expiration date</span>
+            <input class="upload-form form-control" type="date" data-bs-date-format="yyyy-mm-dd" id="certificate-expiration-date" required>
+          </div>
+        </span>
         <div class="input-group mb-3">
           <span class="input-group-text">Issuing authority</span>
           <input type="text" class="upload-form form-control" id="certificate-authority" required>
         </div>
         <div class="input-group mb-3">
           <span class="input-group-text">Owner address</span>
-          <input type="text" class="upload-form form-control" id="certificate-owner" placeholder="Owner" required>
+          <input type="text" class="upload-form form-control" id="certificate-owner" placeholder="Owner" required readonly>
         </div>
         <button type="button" class="btn btn-primary mb-4" onclick="App.uploadCertificate()" id="btn-upload">Upload</button>
         <br>
