@@ -9,6 +9,7 @@ App = {
 
   init: function() {
     console.log("Initialization function")
+    App.showSpinner();
     if(App.account){
       mainContent.innerHTML = `
             <div class="jumbotron">
@@ -35,6 +36,7 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   //If the user is not logged with the wallet, display connect to Metamask button
@@ -98,6 +100,7 @@ App = {
 
   //The user clicks on Connect wallet
   connectMetamask: function(){
+    App.showSpinner();
     if (typeof window.ethereum !== "undefined") {
       ethereum.request({ method: "eth_requestAccounts" })
         .then(async (accounts) => {
@@ -154,10 +157,12 @@ App = {
       //window.open("https://metamask.io/download/", "_blank");
       errorMsg.innerHTML = "Please, install metamask";
     }
+    App.hideSpinner();
   },
 
   //List the certificates which is owned by the current user
   displayCertificates: function(){
+    App.showSpinner();
     if(App.account){
       App.contracts.Certificate.deployed().then(function(instance){
         certificateInstance = instance;       
@@ -232,10 +237,11 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   uploadCertificate: function() {    
-
+    App.showSpinner();
     // Check if all required inputs field have been compiled
     var valid = true;
     var inputs = document.getElementsByClassName("upload-form");
@@ -303,6 +309,7 @@ App = {
         console.error(error);
       });
     }
+    App.hideSpinner();
   },
 
   // create new certificate
@@ -346,6 +353,7 @@ App = {
 
   // display profile
   displayProfile: async function(){
+    App.showSpinner();
     if(App.account){
       let role = "";
       let account_name= "";
@@ -580,10 +588,12 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // manage team webpage
   displayTeam: async function(){
+    App.showSpinner();
     if(App.account){
       mainContent.innerHTML = `
         <label for="memberAddress">Add team member</label><br>
@@ -611,10 +621,12 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // display list of the available courses
   displayCourses: async function(){
+    App.showSpinner();
     if(App.account){
       mainContent.innerHTML = `
       <div class="jumbotron">
@@ -650,10 +662,12 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // display the form to add a new course
   displayAddNewCourse: function(){
+    App.showSpinner();
     if(App.account){
       mainContent.innerHTML = `
       <div class="jumbotron">
@@ -687,9 +701,11 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   addCourseClick: function() {
+    App.showSpinner();
     // Check if all required inputs field have been compiled
     var valid = true;
     var inputs = document.getElementsByClassName("course-form");
@@ -736,11 +752,12 @@ App = {
         console.error(error);
       });
     }      
-    
+    App.hideSpinner();
   },
   
   // create the certificate for the partecipant
   courseCreateCertificate: function(course_id, blockchain_id, page){
+    App.showSpinner();
     if(App.account){
       $("#createCertificateMsg").html(`
         <div class="alert alert-success my-2" role="alert">NFT certificate successfully created!</div>`
@@ -748,10 +765,12 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // Add a new team member wallet address
   addTeamMember: function(){
+    App.showSpinner();
     let userWalletAddress = $("#memberAddress").val();
     let userRole = $("#memberRole").val();
 
@@ -770,11 +789,12 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
   // Delete NFT
   deleteNFT: function(tokenId){
-
+    App.showSpinner();
     App.contracts.Certificate.deployed().then(async function(instance){
       CertificateInstance = instance;
 
@@ -792,10 +812,12 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
   // Invalidate NFT
   invalidateNFT: function(tokenId){
+    App.showSpinner();
     console.log("test: "+tokenId);
     App.contracts.Eagle.deployed().then(async function(instance){
       EagleInstance = instance;
@@ -814,11 +836,12 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
   // Set the NFT as valid
   validateNFT: function(tokenId){
-
+    App.showSpinner();
     console.log("validate "+tokenId);
 
     App.contracts.Eagle.deployed().then(async function(instance){
@@ -838,6 +861,7 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
  /**===MODEL===*/
@@ -927,6 +951,7 @@ getCourses: function(userId){
 
 // Delete the selected course
 deleteCourse: function(courseId){
+  App.showSpinner();
   if(confirm("Are you sure to delete the selected course?")){
     fetch('../api/v1/courses/'+courseId, {
         method: 'DELETE',
@@ -939,6 +964,7 @@ deleteCourse: function(courseId){
       }
     })
   }
+  App.hideSpinner();
 },
 
 // subscribe to input course
@@ -956,6 +982,7 @@ courseSubscribe: async function(course_id, blockchain_id){
 
 // unsubscribe to input course
 courseUnsubscribe: async function(course_id, blockchain_id){
+  App.showSpinner();
   if(blockchain_id != -1){    
     //console.log("course_id: "+course_id+" user_blockchain_id: "+blockchain_id);
     await fetch('../api/v1/unsubscribe', {
@@ -965,6 +992,7 @@ courseUnsubscribe: async function(course_id, blockchain_id){
     })
     .catch( error => console.error(error) ); //catch dell'errore
   }
+  App.hideSpinner();
 },
 
 // get the list of users subscribed to the input course
@@ -1035,6 +1063,7 @@ getUnsubscribedUsers: function(course_id){
 
 // remove course partecipant
 courseRemovePartecipant: async function(course_id, blockchain_id, page=undefined){
+  App.showSpinner();
   if(App.account){
     // Update the members subscribed to the course
     await App.courseUnsubscribe(course_id, blockchain_id)
@@ -1049,10 +1078,12 @@ courseRemovePartecipant: async function(course_id, blockchain_id, page=undefined
   }else{
     App.displayConnectMetamask();
   }
+  App.hideSpinner();
 }, 
 
 // add course partecipant
 courseAddPartecipant: async function(course_id, blockchain_id, page=undefined){
+  App.showSpinner();
   if(App.account){
     // Update the members subscribed to the course
     await App.courseSubscribe(course_id, blockchain_id)
@@ -1065,6 +1096,7 @@ courseAddPartecipant: async function(course_id, blockchain_id, page=undefined){
   }else{
     App.displayConnectMetamask();
   }
+  App.hideSpinner();
 }, 
 //...
 
@@ -1090,6 +1122,7 @@ displayNotInTeam: function(){
 },
 
 displayEditCourse: function(course_id){
+  App.showSpinner();
   if(App.account){
     mainContent.innerHTML = `
     <div class="jumbotron">
@@ -1139,11 +1172,13 @@ displayEditCourse: function(course_id){
   }else{
     App.displayConnectMetamask();
   }
+  App.hideSpinner();
 },
 
 // Page: upload certificate
 // load the user interface
 displayUploadCertificateForm: async function(owner=undefined, from=undefined){
+  App.showSpinner();
   if(App.account){
     mainContent.innerHTML = `
     <div class="jumbotron">
@@ -1233,9 +1268,24 @@ displayUploadCertificateForm: async function(owner=undefined, from=undefined){
   }else{ // If wallet is not connected
     App.displayConnectMetamask();
   }
+  App.hideSpinner();
 },
 
 /**===========*/
+
+/**===SPINNER===*/
+
+// Show loading page
+showSpinner: function(){
+  spinnerwrapper.style.display = '';
+},
+
+// Hide loading page
+hideSpinner: function(){
+  setTimeout(() => {
+    spinnerwrapper.style.display = 'none';
+  }, 1000);
+},
 
 /**===CONTROLLER===*/
 
