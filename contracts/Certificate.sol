@@ -11,6 +11,8 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
 
+    address private eagleAddress;   // TODO: creare smart contract astratto
+
     // struct representing certificate information
     struct CertificateItem {
         uint256 creationDate;       // timestamp which indicates when the certificate has been created
@@ -38,7 +40,9 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
     );
     /**================================*/
 
-    constructor() ERC721("Certificate", "CERT") {}
+    constructor(address _eagleAddress) ERC721("Certificate", "CERT") {
+        eagleAddress = _eagleAddress;
+    }
 
     function safeMint(
                 string memory uri,
@@ -76,7 +80,43 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         return tokenId;
     }
 
-    //TODO: spostarla in Eagle.sol
+    function safeMintTo(
+                string memory uri,
+                uint256 _exparationDate,
+                bool _isNonExpiring, 
+                address owner
+            ) public returns (uint256) {
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(owner, tokenId);
+        _setTokenURI(tokenId, uri);
+
+        uint256 creationDate = block.timestamp;
+        bool _isValid = true;
+        bool isNonExpiring = _isNonExpiring;
+        uint256 exparationDate = (isNonExpiring) ? 0 : _exparationDate;
+        address creator = msg.sender;
+
+        mintedCertificates[tokenId] = CertificateItem(
+            creationDate,
+            exparationDate,
+            isNonExpiring,
+            creator,
+            _isValid
+        );
+
+        emit CertificateItemCreated(
+            creationDate,
+            exparationDate,
+            isNonExpiring,
+            creator,
+            _isValid
+        );
+
+        emit TokenMinted(tokenId, uri);
+        return tokenId;
+    }
+
     function getTokensOwnedByMe() public view returns (uint256[] memory) {
         uint256 numberOfExistingTokens = _tokenIdCounter.current();
         uint256 numberOfTokensOwned = balanceOf(msg.sender);
@@ -85,7 +125,7 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         uint256 currentIndex = 0;
         for (uint256 i = 0; i < numberOfExistingTokens; i++) {
             uint256 tokenId = i;
-            if(!_exists(tokenId)) continue; // the token does not exist anymore //TODO: risolvere in altro modo
+            if(!_exists(tokenId)) continue; // the token does not exist anymore
             if (ownerOf(tokenId) != msg.sender) continue;
             ownedTokenIds[currentIndex] = tokenId;
             currentIndex += 1;
@@ -98,8 +138,8 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         super._burn(tokenId);
     }
 
-    //TODO: possibile spostarla in Eagle.sol? (Non credo)
-    function deleteNFT(uint256 tokenId) public {
+    function deleteNFT(uint256 tokenId) public{
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner nor approved");
         _burn(tokenId);
     }
 
@@ -128,12 +168,10 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         // the token is not valid
         if (cert_obj.isValid==false) return false;
 
-        // if the certificates has an expiration date
-        // and it is expired, then set certificate
-        // validity to false
+        // check expiration date
         if (cert_obj.isNonExpiring) return true;
+
         uint256 currentTimestamp = block.timestamp;
-        //  cert_obj.isValid = cert_obj.isValid && (cert_obj.exparationDate>currentTimestamp);  // TODO: riflettere come impostare il certificato not valid dopo un po' qui non posso modificare lo stato
         return (cert_obj.exparationDate>currentTimestamp);
     }
 
@@ -149,16 +187,18 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
 
     // set to false the validity of the certificate specified as
     // input parameter
-    function setCertificateNotValid(uint256 tokenId) public{    // TODO: pensare cosa succede se il certificato con l'ID che viene passato non esiste
-                                                                // TODO: renderla chiamabile solo dai certificati dei clienti
+    function setCertificateNotValid(uint256 tokenId) public{
+        require(msg.sender == eagleAddress, "No permission.");
+        require(mintedCertificates[tokenId].creationDate != 0, "Certificate does not exist");
         CertificateItem storage cert_obj = mintedCertificates[tokenId];
         cert_obj.isValid = false;        
     }
 
     // set to true the validity of the certificate specified as
     // input parameter
-    function setCertificateValid(uint256 tokenId) public{       // TODO: pensare cosa succede se il certificato con l'ID che viene passato non esiste
-                                                                // TODO: renderla chiamabile solo dai certificati dei clienti
+    function setCertificateValid(uint256 tokenId) public{
+        require(msg.sender == eagleAddress, "No permission.");
+        require(mintedCertificates[tokenId].creationDate != 0, "Certificate does not exist");
         CertificateItem storage cert_obj = mintedCertificates[tokenId];
         cert_obj.isValid = true;        
     }
