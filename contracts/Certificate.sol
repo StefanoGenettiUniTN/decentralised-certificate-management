@@ -11,7 +11,7 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
 
-    address private eagleAddress;   // TODO: creare smart contract astratto
+    address private eagleAddress;
 
     // struct representing certificate information
     struct CertificateItem {
