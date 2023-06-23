@@ -217,6 +217,8 @@ App = {
             let date_expiration = result.date_expiration;
             let issuing_authority = result.issuing_authority;
 
+            let date_expiration_html = (date_expiration==undefined) ? '' : `<li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>`;
+
             if(user_address==undefined){ 
               $("#certificateList").append(`
                 <div class="col-mb-4">
@@ -228,7 +230,7 @@ App = {
                     </div>
                     <ul class="list-group list-group-flush">
                       <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
-                      <li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>
+                      `+date_expiration_html+`
                       <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
                       <li class="list-group-item"><b>category: </b>`+category+`</li>
                       <li class="list-group-item"><b>validity: </b>`+cert_valid+`</li>
@@ -253,7 +255,7 @@ App = {
                     </div>
                     <ul class="list-group list-group-flush">
                       <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
-                      <li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>
+                      `+date_expiration_html+`
                       <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
                       <li class="list-group-item"><b>category: </b>`+category+`</li>
                       <li class="list-group-item"><b>validity: </b>`+cert_valid+`</li>
