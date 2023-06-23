@@ -219,12 +219,34 @@ App = {
 
             let date_expiration_html = (date_expiration=='undefined') ? '' : `<li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>`;
             let validity_html = (cert_valid) ? `<li class="list-group-item list-group-item-success"><b>validity: </b>`+cert_valid+`</li>` : `<li class="list-group-item list-group-item-danger"><b>validity: </b>`+cert_valid+`</li>`
+            let image_link = "images/";
+            switch (category){
+              case 'DFLT':
+                image_link+="DFLT.png";
+                break;
+              case 'FRMZ':
+                image_link+="FRMZ.png";
+                break;
+              case 'SECU':
+                image_link+="SECU.png";
+                break;
+              case 'WELL':
+                image_link+="WELL.png";
+                break;
+              case 'CURR':
+                image_link+="CURR.png";
+                break;
+              case 'LANG':
+                image_link6="LANG.png";
+                break;
+            }
+               
 
             if(user_address==undefined){ 
               $("#certificateList").append(`
                 <div class="col-mb-4">
                   <div class="card" style="width: 25rem;">
-                    <img src="images/defaultCertificateIcon.png" class="card-img-top">
+                    <img src=`+image_link+` class="card-img-top">
                     <div class="card-body">
                     <h5 class="card-title">`+name+`</h5>
                     <p class="card-text">`+description+`</p>
