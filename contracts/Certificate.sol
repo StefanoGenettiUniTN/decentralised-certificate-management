@@ -134,7 +134,7 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         return ownedTokenIds;
     }
     
-    function getTokensOwnedByAnotherUser(address user) public view returns (uint256[] memory) {
+    function getTokensOwnedByUser(address user) public view returns (uint256[] memory) {
         uint256 numberOfExistingTokens = _tokenIdCounter.current();
         uint256 numberOfTokensOwned = balanceOf(user);
         uint256[] memory ownedTokenIds = new uint256[](numberOfTokensOwned);
