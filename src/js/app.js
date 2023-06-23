@@ -9,6 +9,7 @@ App = {
 
   init: function() {
     console.log("Initialization function")
+    App.showSpinner();
     if(App.account){
       mainContent.innerHTML = `
             <div class="jumbotron">
@@ -35,6 +36,7 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   //If the user is not logged with the wallet, display connect to Metamask button
@@ -51,6 +53,7 @@ App = {
         </p>
       </div>
     `;
+    accountaddress.innerHTML="";
   },
 
   initWeb3: async function() {
@@ -98,6 +101,7 @@ App = {
 
   //The user clicks on Connect wallet
   connectMetamask: function(){
+    App.showSpinner();
     if (typeof window.ethereum !== "undefined") {
       ethereum.request({ method: "eth_requestAccounts" })
         .then(async (accounts) => {
@@ -128,6 +132,8 @@ App = {
             </div>
           `;
 
+          accountaddress.innerHTML = `<ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="#" onclick='App.displayProfile();'><span class="material-symbols-outlined" id='menuicon'>account_circle</span><span>${App.account}</span></a></li></ul><button type="button" class="btn btn-danger position-relative" onclick="App.disconnectMetamask();">Logout</button>`
+
           // clear error message section
           errorMsg.innerHTML = ``;
 
@@ -137,6 +143,9 @@ App = {
             return instance.getMemberRole(App.account);       
           }).then(function(result){
             App.role = result;
+            if(App.role === 'tl'){
+              menuicon.innerHTML = "supervisor_account";
+            }
             console.log("account role: "+App.role);
           }).catch(function(err){
             console.log("error:")
@@ -154,20 +163,31 @@ App = {
       //window.open("https://metamask.io/download/", "_blank");
       errorMsg.innerHTML = "Please, install metamask";
     }
+    App.hideSpinner();
   },
 
   //List the certificates which is owned by the current user
-  displayCertificates: function(){
+  displayCertificates: function(user_address){
+    App.showSpinner();
     if(App.account){
       App.contracts.Certificate.deployed().then(function(instance){
         certificateInstance = instance;       
-        return certificateInstance.getTokensOwnedByMe({from: App.account});
+        if(user_address==undefined){ 
+          return certificateInstance.getTokensOwnedByMe({from: App.account});
+        } else {
+          return certificateInstance.getTokensOwnedByUser(user_address, {from: App.account});
+        }
       }).then(async function(result){
         console.log(result);
-        mainContent.innerHTML = `
+        mainContent.innerHTML = (user_address==undefined) ? `
           <br>
-          <div id="certificateList"></div>
-        `;
+          <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
+        ` : `
+          <button id='back' class='btn btn-primary' onclick="App.displayTeam();">Back</button>
+          <br>
+          <p>You are viewing the certificates of user <strong>${user_address}</strong></p>
+          <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
+        ` 
         
         let token_id;
         let cert_uri;
@@ -185,7 +205,6 @@ App = {
           // check whether or not it is still valid
           cert_valid = await certificateInstance.tokenIsValid.call(token_id);
           console.log("valid: "+cert_valid);
-
           //JSON parsing
           await $.getJSON(cert_uri, function(result){
             console.log(result);
@@ -198,32 +217,85 @@ App = {
             let date_expiration = result.date_expiration;
             let issuing_authority = result.issuing_authority;
 
-            $("#certificateList").append(`
-                <div class="card" style="width: 25rem;">
-                  <img src="images/defaultCertificateIcon.png" class="card-img-top">
-                  <div class="card-body">
-                  <h5 class="card-title">`+name+`</h5>
-                  <p class="card-text">`+description+`</p>
-                  </div>
-                  <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
-                    <li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>
-                    <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
-                    <li class="list-group-item"><b>category: </b>`+category+`</li>
-                    <li class="list-group-item"><b>validity: </b>`+cert_valid+`</li>
-                  </ul>
-                  <div class="card-body">
-                    <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
-                    <button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>
-                    <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`')">Invalidate</button>
-                    <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`')">Set valid</button>
+            let date_expiration_html = (date_expiration=='undefined') ? '' : `<li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>`;
+            let validity_html = (cert_valid) ? `<li class="list-group-item list-group-item-success"><b>validity: </b>`+cert_valid+`</li>` : `<li class="list-group-item list-group-item-danger"><b>validity: </b>`+cert_valid+`</li>`
+            let image_link = "images/";
+            switch (category){
+              case 'DFLT':
+                image_link+="DFLT.png";
+                break;
+              case 'FRMZ':
+                image_link+="FRMZ.png";
+                break;
+              case 'SECU':
+                image_link+="SECU.png";
+                break;
+              case 'WELL':
+                image_link+="WELL.png";
+                break;
+              case 'CURR':
+                image_link+="CURR.png";
+                break;
+              case 'LANG':
+                image_link6="LANG.png";
+                break;
+            }
+               
+
+            if(user_address==undefined){ 
+              $("#certificateList").append(`
+                <div class="col-mb-4">
+                  <div class="card" style="width: 25rem;">
+                    <img src=`+image_link+` class="card-img-top">
+                    <div class="card-body">
+                    <h5 class="card-title">`+name+`</h5>
+                    <p class="card-text">`+description+`</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
+                      `+date_expiration_html+`
+                      <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
+                      <li class="list-group-item"><b>category: </b>`+category+`</li>
+                      `+validity_html+`
+                    </ul>
+                    <div class="card-body">
+                      <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
+                      <button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>
+                      <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`')">Invalidate</button>
+                      <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`')">Set valid</button>
+                    </div>
                   </div>
                 </div>
-              `);            
-
-          }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
+                `);
+            } else {
+              $("#certificateList").append(`
+                <div class="col-mb-4">
+                  <div class="card" style="width: 25rem;">
+                    <img src="images/defaultCertificateIcon.png" class="card-img-top">
+                    <div class="card-body">
+                    <h5 class="card-title">`+name+`</h5>
+                    <p class="card-text">`+description+`</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
+                      `+date_expiration_html+`
+                      <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
+                      <li class="list-group-item"><b>category: </b>`+category+`</li>
+                      `+validity_html+`
+                    </ul>
+                    <div class="card-body">
+                      <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
+                      <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`')">Invalidate</button>
+                      <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`')">Set valid</button>
+                    </div>
+                  </div>
+                </div>
+                `);
+            }
+          }).fail(function(err) { alert('getJSON request failed! ');}); //TODO: prepare more meaningful error handling
           //...end JSON parsing
         }
+        App.hideSpinner();
 
       }).catch(function(err){
         console.log("error:")
@@ -231,11 +303,12 @@ App = {
       });
     }else{
       App.displayConnectMetamask();
+      App.hideSpinner();
     }
   },
 
   uploadCertificate: function() {    
-
+    App.showSpinner();
     // Check if all required inputs field have been compiled
     var valid = true;
     var inputs = document.getElementsByClassName("upload-form");
@@ -293,9 +366,11 @@ App = {
         if(mint) {
           resultAlert.addClass("alert-success")
           resultAlert.text("The certificate has been uploaded")
+          App.hideSpinner();
         } else {
           resultAlert.addClass("alert-danger")
           resultAlert.text("An error occured while uploading the certificate")
+          App.hideSpinner();
         }
       })
       .catch(error => {
@@ -303,6 +378,7 @@ App = {
         console.error(error);
       });
     }
+    
   },
 
   // create new certificate
@@ -346,6 +422,7 @@ App = {
 
   // display profile
   displayProfile: async function(){
+    App.showSpinner();
     if(App.account){
       let role = "";
       let account_name= "";
@@ -580,41 +657,71 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // manage team webpage
   displayTeam: async function(){
+    App.showSpinner();
     if(App.account){
-      mainContent.innerHTML = `
-        <label for="memberAddress">Add team member</label><br>
-        <input type="text" id="memberAddress" name="memberAddress"><br>
-        <label for="memberRole">What is its role?</label><br>
-        <select id="memberRole" size="2">
-          <option value="1">Team leader</option>
-          <option value="2">Standard</option>
-        </select><br>
-        <button onclick="App.addTeamMember()">Add</button>
-        <hr>
-        <div id="teamList"></div>
-      `;
-      
       let eagleContractInstance = await App.contracts.Eagle.deployed();
-      eagleContractInstance.getTeamMembers().then(function(result){
-        for(teamMember in result){
-          document.getElementById("teamList").innerHTML += `<p>`+result[teamMember]+`</p>`;
+      let members = await eagleContractInstance.getTeamMembers();
+      let role = await eagleContractInstance.getMemberRole(App.account);
+      if(role!='tl' && role!='unknown'){
+        mainContent.innerHTML = `
+          <span>You are not a <strong>Team Leader</strong>. You cannot see the content of this page.</span><br>
+          <span>You can click any other element in the menu to use the application.</span>
+        `
+      } else {
+        mainContent.innerHTML = `
+          <div class='form-row'>
+            <div class='form-group col-md-6'>
+              <label for="memberAddress">Add team member</label><br>
+              <input type="text" class='form-control' id="memberAddress" name="memberAddress"><br>
+              <div class='row'> 
+                <div class='col'>
+                  <label for="memberName">Add team member name</label><br>
+                  <input type="text" class='form-control' id="memberName" name="memberName"><br>
+                </div>
+                <div class='col'>
+                  <label for="memberSurname">Add team member surname</label><br>
+                  <input type="text" class='form-control' id="memberSurname" name="memberSurname"><br>
+                </div>
+              </div>
+              <label for="memberRole">What is its role?</label><br>
+              <select id="memberRole" class='form-control'>
+                <option value="1">Team leader</option>
+                <option value="2">Standard</option>
+              </select><br>
+            <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
+            </div>
+          </div>
+          <hr>
+          <div class='form-row'>
+          <div id="teamList" class='list-group list-group-flush'></div>
+          </div>
+        `;
+        
+        
+        for(teamMember in members){
+          role = await eagleContractInstance.getMemberRole(members[teamMember]);
+          if(role === "tl"){
+            document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`");'>Show certificates</button></div><br>`;
+          } else {
+            document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">account_circle</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`");'>Show certificates</button></div><br>`;
+          }
+          
         }
-      }).catch(function(err){
-        console.log("error:")
-        console.log(err.message);
-      });
-
+      }
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // display list of the available courses
   displayCourses: async function(){
+    App.showSpinner();
     if(App.account){
       mainContent.innerHTML = `
       <div class="jumbotron">
@@ -650,10 +757,12 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // display the form to add a new course
   displayAddNewCourse: function(){
+    App.showSpinner();
     if(App.account){
       mainContent.innerHTML = `
       <div class="jumbotron">
@@ -687,9 +796,11 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   addCourseClick: function() {
+    App.showSpinner();
     // Check if all required inputs field have been compiled
     var valid = true;
     var inputs = document.getElementsByClassName("course-form");
@@ -726,9 +837,11 @@ App = {
         if(data.status == 201) {
           resultAlert.addClass("alert-success")
           resultAlert.text("Course successfully created!")
+          App.hideSpinner();
         } else {
           resultAlert.addClass("alert-danger")
           resultAlert.text("Something wrong. Check your compilation.")
+          App.hideSpinner();
         }
       })
       .catch(error => {
@@ -736,11 +849,11 @@ App = {
         console.error(error);
       });
     }      
-    
   },
   
   // create the certificate for the partecipant
   courseCreateCertificate: function(course_id, blockchain_id, page){
+    App.showSpinner();
     if(App.account){
       $("#createCertificateMsg").html(`
         <div class="alert alert-success my-2" role="alert">NFT certificate successfully created!</div>`
@@ -748,10 +861,12 @@ App = {
     }else{
       App.displayConnectMetamask();
     }
+    App.hideSpinner();
   },
 
   // Add a new team member wallet address
   addTeamMember: function(){
+    App.showSpinner();
     let userWalletAddress = $("#memberAddress").val();
     let userRole = $("#memberRole").val();
 
@@ -761,6 +876,7 @@ App = {
       try {        
         let result = await EagleInstance.addTeamMember(userWalletAddress, userRole, {from: App.account});
         App.displayTeam();
+        App.hideSpinner();
       }catch(err){
         console.log("error:")
         console.log(err);
@@ -774,7 +890,7 @@ App = {
 
   // Delete NFT
   deleteNFT: function(tokenId){
-
+    App.showSpinner();
     App.contracts.Certificate.deployed().then(async function(instance){
       CertificateInstance = instance;
 
@@ -792,10 +908,12 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
   // Invalidate NFT
   invalidateNFT: function(tokenId){
+    App.showSpinner();
     console.log("test: "+tokenId);
     App.contracts.Eagle.deployed().then(async function(instance){
       EagleInstance = instance;
@@ -814,11 +932,12 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
   // Set the NFT as valid
   validateNFT: function(tokenId){
-
+    App.showSpinner();
     console.log("validate "+tokenId);
 
     App.contracts.Eagle.deployed().then(async function(instance){
@@ -838,6 +957,7 @@ App = {
       console.log("error:")
       console.log(err.message);
     });
+    App.hideSpinner();
   },
 
  /**===MODEL===*/
@@ -944,6 +1064,7 @@ getCourses: function(userId){
 
 // Delete the selected course
 deleteCourse: function(courseId){
+  App.showSpinner();
   if(confirm("Are you sure to delete the selected course?")){
     fetch('../api/v1/courses/'+courseId, {
         method: 'DELETE',
@@ -956,6 +1077,7 @@ deleteCourse: function(courseId){
       }
     })
   }
+  App.hideSpinner();
 },
 
 // subscribe to input course
@@ -1052,6 +1174,7 @@ getUnsubscribedUsers: function(course_id){
 
 // remove course partecipant
 courseRemovePartecipant: async function(course_id, blockchain_id, page=undefined){
+  App.showSpinner();
   if(App.account){
     // Update the members subscribed to the course
     await App.courseUnsubscribe(course_id, blockchain_id)
@@ -1066,10 +1189,12 @@ courseRemovePartecipant: async function(course_id, blockchain_id, page=undefined
   }else{
     App.displayConnectMetamask();
   }
+  App.hideSpinner();
 }, 
 
 // add course partecipant
 courseAddPartecipant: async function(course_id, blockchain_id, page=undefined){
+  App.showSpinner();
   if(App.account){
     // Update the members subscribed to the course
     await App.courseSubscribe(course_id, blockchain_id)
@@ -1082,6 +1207,7 @@ courseAddPartecipant: async function(course_id, blockchain_id, page=undefined){
   }else{
     App.displayConnectMetamask();
   }
+  App.hideSpinner();
 }, 
 //...
 
@@ -1107,6 +1233,7 @@ displayNotInTeam: function(){
 },
 
 displayEditCourse: function(course_id){
+  App.showSpinner();
   if(App.account){
     mainContent.innerHTML = `
     <div class="jumbotron">
@@ -1156,11 +1283,13 @@ displayEditCourse: function(course_id){
   }else{
     App.displayConnectMetamask();
   }
+  App.hideSpinner();
 },
 
 // Page: upload certificate
 // load the user interface
 displayUploadCertificateForm: async function(owner=undefined, from=undefined){
+  App.showSpinner();
   if(App.account){
     mainContent.innerHTML = `
     <div class="jumbotron">
@@ -1250,9 +1379,24 @@ displayUploadCertificateForm: async function(owner=undefined, from=undefined){
   }else{ // If wallet is not connected
     App.displayConnectMetamask();
   }
+  App.hideSpinner();
 },
 
 /**===========*/
+
+/**===SPINNER===*/
+
+// Show loading page
+showSpinner: function(){
+  spinnerwrapper.style.display = '';
+},
+
+// Hide loading page
+hideSpinner: function(){
+  setTimeout(() => {
+    spinnerwrapper.style.display = 'none';
+  }, 1000);
+},
 
 /**===CONTROLLER===*/
 
@@ -1276,6 +1420,17 @@ setBlockchainId: async function (){
   });
 
   return result;
+},
+
+// disconnect Metamask wallet
+disconnectMetamask: async function(){
+  App.showSpinner();
+  if(App.account){
+    window.localStorage.clear();
+    App.account = null;
+    App.displayConnectMetamask();
+  }
+  App.hideSpinner();
 }
 
 /**===========*/

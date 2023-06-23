@@ -24,6 +24,8 @@
     </style>
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="js/jquery.min.js"></script>
@@ -37,12 +39,6 @@
       $(document).ready(function(){
         $(window).load(function() {
           App.init();
-        });
-        $("#mainContent").on('DOMSubtreeModified', function(){
-          $('#spinnerwrapper').show();
-          setTimeout(() => {
-            $('#spinnerwrapper').hide();
-          }, 1000);
         });
       });
     </script>
@@ -95,9 +91,10 @@
             </li>
         </ul>
         </div>
+        <div id="accountaddress" class="container-fluid d-flex justify-content-end"></div>
     </nav>
 
-    <div class="container-fluid", style="padding-top: 70px;">
+    <div class="container-fluid", style="padding-top: 70px; min-height: 400px; margin-bottom: 100px; clear: both;">
       <div id="spinnerwrapper">
         <div class="d-flex flex-column align-items-center justify-content-center">
           <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
@@ -109,5 +106,10 @@
         <div id="errorMsg"></div>
     </div>
 
+    <footer class="bg-light text-center text-lg-start py-3 fixed-bottom">
+      <div class="container">
+        <span class="text-muted">Authors: Eros Rigaba, Stefano Genetti, Pietro Fronza</span>
+      </div>
+    </footer>
   </body>
 </html>
