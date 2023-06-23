@@ -217,7 +217,8 @@ App = {
             let date_expiration = result.date_expiration;
             let issuing_authority = result.issuing_authority;
 
-            let date_expiration_html = (date_expiration==undefined) ? '' : `<li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>`;
+            let date_expiration_html = (date_expiration=='undefined') ? '' : `<li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>`;
+            let validity_html = (cert_valid) ? `<li class="list-group-item list-group-item-success"><b>validity: </b>`+cert_valid+`</li>` : `<li class="list-group-item list-group-item-danger"><b>validity: </b>`+cert_valid+`</li>`
 
             if(user_address==undefined){ 
               $("#certificateList").append(`
@@ -233,7 +234,7 @@ App = {
                       `+date_expiration_html+`
                       <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
                       <li class="list-group-item"><b>category: </b>`+category+`</li>
-                      <li class="list-group-item"><b>validity: </b>`+cert_valid+`</li>
+                      `+validity_html+`
                     </ul>
                     <div class="card-body">
                       <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
@@ -258,7 +259,7 @@ App = {
                       `+date_expiration_html+`
                       <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
                       <li class="list-group-item"><b>category: </b>`+category+`</li>
-                      <li class="list-group-item"><b>validity: </b>`+cert_valid+`</li>
+                      `+validity_html+`
                     </ul>
                     <div class="card-body">
                       <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
