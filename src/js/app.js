@@ -237,7 +237,7 @@ App = {
                 image_link+="CURR.png";
                 break;
               case 'LANG':
-                image_link6="LANG.png";
+                image_link+="LANG.png";
                 break;
             }
                
