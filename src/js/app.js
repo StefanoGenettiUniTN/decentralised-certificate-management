@@ -864,6 +864,8 @@ getCourses: function(userId){
   const html_courses_sub = document.getElementById('output_courses_sub');
   var courses_text="";
   var courses_text_sub="";
+  
+
 
   fetch('../api/v1/courses')
   .then((resp) => resp.json()) //transform data into JSON
@@ -883,6 +885,22 @@ getCourses: function(userId){
           let users = course["users"];
           let self_id = self.substring(self.lastIndexOf('/') + 1);
 
+          var buttons = "";
+         
+          // Display edit and delete button to certain roles
+          if(App.role != "std") {
+            buttons = 
+              `<button class="btn btn-danger" onclick="App.deleteCourse('`+self_id+`')">Delete</button>
+              <button class="btn btn-warning" onclick="App.displayEditCourse('`+self_id+`')">Edit</button>
+            `;
+          }
+
+          buttons += 
+              `</div>
+              </div>
+            `;
+
+          // Display the courses
           if(users.includes(Number(userId))){ // user already subscribed to the course
             courses_text_sub += `
               <div class="card my-2" style="width: 30rem;">
@@ -893,12 +911,12 @@ getCourses: function(userId){
                 <ul class="list-group list-group-flush">
                   <li class="list-group-item"><b>Date: </b>`+date+`</li>
                 </ul>
-                <div class="card-body" id="courseControl">
-                  <button class="btn btn-secondary" onclick="App.courseRemovePartecipant('`+self_id+`', '`+App.blockchainid+`')">Unsubscribe</button>
-                  <button class="btn btn-warning" onclick="App.displayEditCourse('`+self_id+`')">Edit</button>
-                </div>
-              </div>
+                <div class="card-body" id="courseControl-`+self_id+`">
+                  <button class="btn btn-secondary" onclick="App.courseRemovePartecipant('`+self_id+`', '`+App.blockchainid+`')">Unsubscribe</button>                  
             `;
+
+            courses_text_sub += buttons;
+            
           }else{  // user is not subscribed yet
             courses_text += `
               <div class="card my-2" style="width: 30rem;">
@@ -909,17 +927,16 @@ getCourses: function(userId){
                 <ul class="list-group list-group-flush">
                   <li class="list-group-item"><b>Date: </b>`+date+`</li>
                 </ul>
-                <div class="card-body" id="courseControl">
-                  <button class="btn btn-success" onclick="App.courseAddPartecipant('`+self_id+`', '`+App.blockchainid+`')">Subscribe</button>
-                  <button class="btn btn-warning" onclick="App.displayEditCourse('`+self_id+`')">Edit</button>
-                  <button class="btn btn-danger" onclick="App.deleteCourse('`+self_id+`')">Delete</button>
-                </div>
-              </div>
+                <div class="card-body" id="courseControl-`+self_id+`">
+                  <button class="btn btn-success" onclick="App.courseAddPartecipant('`+self_id+`', '`+App.blockchainid+`')">Subscribe</button>                                
             `;
+
+            courses_text += buttons;
           }
       }
       html_courses.innerHTML += courses_text;
       html_courses_sub.innerHTML += courses_text_sub;
+      
   })
   .catch( error => console.error(error) ); //catch dell'errore
 },
