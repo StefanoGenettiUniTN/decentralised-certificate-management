@@ -167,20 +167,27 @@ App = {
   },
 
   //List the certificates which is owned by the current user
-  displayCertificates: function(){
+  displayCertificates: function(user_address){
     App.showSpinner();
     if(App.account){
       App.contracts.Certificate.deployed().then(function(instance){
         certificateInstance = instance;       
-
+        if(user_address==undefined){ 
           return certificateInstance.getTokensOwnedByMe({from: App.account});
-
+        } else {
+          return certificateInstance.getTokensOwnedByUser(user_address, {from: App.account});
+        }
       }).then(async function(result){
         console.log(result);
-        mainContent.innerHTML = `
+        mainContent.innerHTML = (user_address==undefined) ? `
           <br>
           <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
-        `
+        ` : `
+          <button id='back' class='btn btn-primary' onclick="App.displayTeam();">Back</button>
+          <br>
+          <p>You are viewing the certificates of user <strong>${user_address}</strong></p>
+          <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
+        ` 
         
         let token_id;
         let cert_uri;
@@ -210,7 +217,7 @@ App = {
             let date_expiration = result.date_expiration;
             let issuing_authority = result.issuing_authority;
 
-
+            if(user_address==undefined){ 
               $("#certificateList").append(`
                 <div class="col-mb-4">
                   <div class="card" style="width: 25rem;">
@@ -235,7 +242,31 @@ App = {
                   </div>
                 </div>
                 `);
-
+            } else {
+              $("#certificateList").append(`
+                <div class="col-mb-4">
+                  <div class="card" style="width: 25rem;">
+                    <img src="images/defaultCertificateIcon.png" class="card-img-top">
+                    <div class="card-body">
+                    <h5 class="card-title">`+name+`</h5>
+                    <p class="card-text">`+description+`</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
+                      <li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>
+                      <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
+                      <li class="list-group-item"><b>category: </b>`+category+`</li>
+                      <li class="list-group-item"><b>validity: </b>`+cert_valid+`</li>
+                    </ul>
+                    <div class="card-body">
+                      <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
+                      <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`')">Invalidate</button>
+                      <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`')">Set valid</button>
+                    </div>
+                  </div>
+                </div>
+                `);
+            }
           }).fail(function(err) { alert('getJSON request failed! ');}); //TODO: prepare more meaningful error handling
           //...end JSON parsing
         }
