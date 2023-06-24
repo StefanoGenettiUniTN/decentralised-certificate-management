@@ -673,6 +673,7 @@ App = {
     if(App.account){
       let eagleContractInstance = await App.contracts.Eagle.deployed();
       let members = await eagleContractInstance.getTeamMembers();
+      console.log(members);
       let role = await eagleContractInstance.getMemberRole(App.account);
       if(role!='tl' && role!='unknown'){
         mainContent.innerHTML = `
@@ -896,17 +897,39 @@ App = {
   addTeamMember: function(){
     App.showSpinner();
     let userWalletAddress = $("#memberAddress").val();
-    let user_name = $("memberName").val();
-    let user_surname = $("memberSurname").val();
+    let user_name = $("#memberName").val();
+    let user_surname = $("#memberSurname").val();
     let userRole = $("#memberRole").val();
+    let userArea = $("#memberArea").val();
 
     App.contracts.Eagle.deployed().then(async function(instance){
       EagleInstance = instance;
 
       try {        
         let result = await EagleInstance.addTeamMember(userWalletAddress, userRole, {from: App.account});
-        App.displayTeam();
-        App.hideSpinner();
+        let blockchain_id = await EagleInstance.getUserId(userWalletAddress);
+        fetch('../api/v1/users', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({memberId: blockchain_id, memberName: user_name, memberSurname: user_surname, memberArea: userArea})
+        })
+        .then(function(data){
+          console.log(data.status);
+          if(data.status == 201) {
+            console.log("YUPPI");
+            App.displayTeam();
+            App.hideSpinner();
+          } else if(data.status == 409) {
+            console.log("OHNO");
+            document.getElementById("errorMsg").innerHTML = "Something went wrong. User already inserted";
+            App.hideSpinner();
+          } else {
+            document.getElementById("errorMsg").innerHTML = "Something went wrong. Missing required information";
+            App.hideSpinner();
+          }
+        })
+
+        
       }catch(err){
         console.log("error:")
         console.log(err);

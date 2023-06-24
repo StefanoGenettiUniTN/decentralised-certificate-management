@@ -22,6 +22,26 @@ router.post('/users', async (req, res) => {
     let name = req.body.memberName;
     let surname = req.body.memberSurname;
     let area = req.body.memberArea;
+
+    if(!blockchain_id || !name || !surname || !area){
+        res.status(400).send("Bad input - missing required information");
+        return;
+    }
+
+    const userExists = await Users.findOne({blockchain_id: blockchain_id});
+    if(userExists){res.status(409).send("User already inserted"); return;}
+
+    let user = new Users({
+        blockchain_id: blockchain_id,
+        name: name,
+        surname: surname,
+        courses: [],
+        area: area
+    });
+
+    await user.save();
+
+    res.status(201).send();
 })
 
 router.get('/users/:id', async (req, res) => {
