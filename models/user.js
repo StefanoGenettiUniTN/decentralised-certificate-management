@@ -6,7 +6,7 @@ const schema = mongoose.Schema({
     surname: String,
     email: String,
     courses: [mongoose.Schema.Types.ObjectId],
-    area: mongoose.Schema.Types.ObjectId
+    area: Number
 },{collection: 'user'})
 
 module.exports = mongoose.model("User", schema)
