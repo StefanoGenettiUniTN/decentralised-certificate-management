@@ -700,15 +700,29 @@ App = {
                 <option value="1">Team leader</option>
                 <option value="2">Standard</option>
               </select><br>
-            <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
+              <label for="memberArea">What is its area?</label><br>
+              <select id="memberArea" class='form-control'></select><br>
+              <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
             </div>
           </div>
           <hr>
           <div class='form-row'>
-          <div id="teamList" class='list-group list-group-flush'></div>
+            <div id="teamList" class='list-group list-group-flush'></div>
           </div>
         `;
-        
+          
+        fetch('../api/v1/areas')
+        .then((resp)=>resp.json())
+        .then(function(data){
+          for(let i=0; i<data.length;i++){
+            var area = data[i];
+            document.getElementById('memberArea').innerHTML += `
+              <option value="${area["area_id"]}">${area["name"]}</option>
+            `;
+          }
+                  
+        })
+
         fetch('../api/v1/users')
           .then((res) => res.json())
           .then(async users => {
@@ -725,6 +739,7 @@ App = {
               }
             }            
           })        
+
       }
     }else{
       App.displayConnectMetamask();

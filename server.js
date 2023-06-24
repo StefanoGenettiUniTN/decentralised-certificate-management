@@ -13,6 +13,7 @@ const course = require('./routes/course.js');
 const subscription = require('./routes/subscription.js');
 const ipfs = require('./routes/ipfs.js');
 const user = require('./routes/user.js');
+const area = require('./routes/area.js');
 //...
 
 // Configure Express.js parsing middleware
@@ -51,6 +52,9 @@ server.use("/api/v1", ipfs);
 // User API
 server.use("/api/v1", user);
 //...
+
+// Area API
+server.use("/api/v1", area);
 
 // Default 404 handler
 server.use((req, res) => {
