@@ -171,7 +171,7 @@ App = {
   },
 
   //List the certificates which is owned by the current user
-  displayCertificates: function(user_address){
+  displayCertificates: function(user_address, blockchain_id){
     App.showSpinner();
     if(App.account){
       App.contracts.Certificate.deployed().then(function(instance){
@@ -184,10 +184,7 @@ App = {
       }).then(async function(result){
         console.log(result);
         if(user_address!=undefined){
-          let eagleContractInstance = await App.contracts.Eagle.deployed();
-          let res = await eagleContractInstance.getUserId(user_address);
-          let memberid = res.toNumber();
-          data_user = await App.getUserInfo(memberid);
+          data_user = await App.getUserInfo(blockchain_id);
         }
         mainContent.innerHTML = (user_address==undefined) ? `
           <br>
@@ -712,24 +709,22 @@ App = {
           </div>
         `;
         
-        
-        for(teamMember in members){
-          let res = await eagleContractInstance.getUserId(members[teamMember], {from: App.account});
-          let memberid = res.toNumber();
-          await App.getUserInfo(memberid).then(async function(user) {
-            console.log(user);
-            let user_name = user["name"];
-            let user_surname = user["surname"];
+        fetch('../api/v1/users')
+          .then((res) => res.json())
+          .then(async users => {
+            for(teamMember in members){
+              let user_name = users[teamMember]["name"];
+              let user_surname = users[teamMember]["surname"];
+              let user_id = users[teamMember]["blockchain_id"];
 
-            role = await eagleContractInstance.getMemberRole(members[teamMember]);
-            if(role === "tl"){
-              document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`");'>Show certificates</button></div><br>`;
-            } else {
-              document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">account_circle</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`");'>Show certificates</button></div><br>`;
-            }
-          })
-        
-        }
+              role = await eagleContractInstance.getMemberRole(members[teamMember]);
+              if(role === "tl"){
+                document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>Show certificates</button></div><br>`;
+              } else {
+                document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">account_circle</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>Show certificates</button></div><br>`;
+              }
+            }            
+          })        
       }
     }else{
       App.displayConnectMetamask();
