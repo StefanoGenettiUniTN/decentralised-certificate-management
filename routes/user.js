@@ -76,4 +76,15 @@ router.delete('/users/:id', async (req, res) => {
     res.status(204).send();
 })
 
+router.patch('/users/:id', async (req, res) => {
+    let user_id = req.params.id;
+    let user = await Users.findOneAndUpdate({blockchain_id: user_id}, req.body, {new: true});
+    if(!user){
+        res.status(404).json({status: "error"})
+        console.log('resource not found');
+        return;
+    }
+    res.status(200).send(user);
+})
+
 module.exports = router
