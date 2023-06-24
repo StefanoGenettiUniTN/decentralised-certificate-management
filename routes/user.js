@@ -63,4 +63,17 @@ router.get('/users/:id', async (req, res) => {
     res.status(200).json(response);
 });
 
+router.delete('/users/:id', async (req, res) => {
+    let user_id = req.params.id;
+    let user = await Users.findOne({blockchain_id: user_id});
+    if(!user){
+        res.status(404).json({status: "error"})
+        console.log('resource not found');
+        return;
+    }
+
+    await user.deleteOne();
+    res.status(204).send();
+})
+
 module.exports = router
