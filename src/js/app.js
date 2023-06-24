@@ -132,14 +132,18 @@ App = {
             </div>
           `;
 
-          accountaddress.innerHTML = `<ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="#" onclick='App.displayProfile();'><span class="material-symbols-outlined" id='menuicon'>account_circle</span><span>${App.account}</span></a></li></ul><button type="button" class="btn btn-danger position-relative" onclick="App.disconnectMetamask();">Logout</button>`
+          accountaddress.innerHTML = `<ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="#" onclick='App.displayProfile();'><span class="material-symbols-outlined" id='menuicon'>account_circle</span><span id="account"></span></a></li></ul><button type="button" class="btn btn-danger position-relative" onclick="App.disconnectMetamask();">Logout</button>`
 
           // clear error message section
           errorMsg.innerHTML = ``;
 
         })
         .then( () => {
-          App.contracts.Eagle.deployed().then(function(instance){
+          App.contracts.Eagle.deployed().then(async function(instance){
+            let res = await instance.getMyUserId({from: App.account});
+            let memberid = res.toNumber();
+            let user_data = await App.getUserInfo(memberid);
+            account.innerHTML = `${user_data["name"]} ${user_data["surname"]}`;
             return instance.getMemberRole(App.account);       
           }).then(function(result){
             App.role = result;
