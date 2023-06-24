@@ -5,7 +5,8 @@ const schema = mongoose.Schema({
     name: String,
     surname: String,
     email: String,
-    courses: [mongoose.Schema.Types.ObjectId]
+    courses: [mongoose.Schema.Types.ObjectId],
+    area: mongoose.Schema.Types.ObjectId
 },{collection: 'user'})
 
 module.exports = mongoose.model("User", schema)

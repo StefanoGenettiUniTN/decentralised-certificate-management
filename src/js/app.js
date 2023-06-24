@@ -179,13 +179,19 @@ App = {
         }
       }).then(async function(result){
         console.log(result);
+        if(user_address!=undefined){
+          let eagleContractInstance = await App.contracts.Eagle.deployed();
+          let res = await eagleContractInstance.getUserId(user_address);
+          let memberid = res.toNumber();
+          data_user = await App.getUserInfo(memberid);
+        }
         mainContent.innerHTML = (user_address==undefined) ? `
           <br>
           <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
         ` : `
           <button id='back' class='btn btn-primary' onclick="App.displayTeam();">Back</button>
           <br>
-          <p>You are viewing the certificates of user <strong>${user_address}</strong></p>
+          <p>You are viewing the certificates of user <strong>${data_user["name"]} ${data_user["surname"]}</strong></p>
           <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
         ` 
         
@@ -704,13 +710,21 @@ App = {
         
         
         for(teamMember in members){
-          role = await eagleContractInstance.getMemberRole(members[teamMember]);
-          if(role === "tl"){
-            document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`");'>Show certificates</button></div><br>`;
-          } else {
-            document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">account_circle</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`");'>Show certificates</button></div><br>`;
-          }
-          
+          let res = await eagleContractInstance.getUserId(members[teamMember], {from: App.account});
+          let memberid = res.toNumber();
+          await App.getUserInfo(memberid).then(async function(user) {
+            console.log(user);
+            let user_name = user["name"];
+            let user_surname = user["surname"];
+
+            role = await eagleContractInstance.getMemberRole(members[teamMember]);
+            if(role === "tl"){
+              document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`");'>Show certificates</button></div><br>`;
+            } else {
+              document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">account_circle</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`");'>Show certificates</button></div><br>`;
+            }
+          })
+        
         }
       }
     }else{
@@ -868,6 +882,8 @@ App = {
   addTeamMember: function(){
     App.showSpinner();
     let userWalletAddress = $("#memberAddress").val();
+    let user_name = $("memberName").val();
+    let user_surname = $("memberSurname").val();
     let userRole = $("#memberRole").val();
 
     App.contracts.Eagle.deployed().then(async function(instance){
@@ -1220,6 +1236,17 @@ getCourseInfo: async function(courseId){
   })
   .catch( error => console.error(error) ); //catch dell'errore
 },
+
+// get information about single user
+getUserInfo: async function(blockchain_id){
+  return fetch('../api/v1/users/'+blockchain_id)
+    .then((resp) => resp.json())
+    .then(function(user) {
+      return user;
+    })
+    .catch( error => console.error(error));
+},
+
 //...
 
 /**===========*/
