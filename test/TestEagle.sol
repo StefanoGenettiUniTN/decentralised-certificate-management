@@ -157,6 +157,11 @@ contract TestEagle is IERC721Receiver{
         uint256[] memory outputTokenArray = deployed_certificate.getTokensOwnedByMe();
         Assert.equal(outputTokenArray[0], 0, "At this point the target user should have only one token with id=0.");
     }
+
+    function testGetTokensOwnedByUser() public{
+        uint256[] memory outputTokenArray = deployed_certificate.getTokensOwnedByUser(standard_user1);
+        Assert.equal(outputTokenArray[0], 1, "At this point the target user should have only one token with id=0.");
+    }
     //...end test getTokensOwnedByMe
 
     // test token uri

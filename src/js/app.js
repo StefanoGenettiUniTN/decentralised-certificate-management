@@ -132,17 +132,14 @@ App = {
             </div>
           `;
 
-          accountaddress.innerHTML = `<ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="#" onclick='App.displayProfile();'><span class="material-symbols-outlined" id='menuicon'>account_circle</span><span id="account"></span></a></li></ul><button type="button" class="btn btn-danger position-relative" onclick="App.disconnectMetamask();">Logout</button>`
-
           // clear error message section
           errorMsg.innerHTML = ``;
 
-        })
-        .then( () => {
+        }).then( () => {
           App.contracts.Eagle.deployed().then(async function(instance){
             // check if the current user is performing the first interaction
             // with the smart contract
-            let smartContractInitialized = await instance.systemInitialized();
+            let smartContractInitialized = await instance.systemInitialized({from: App.account});
 
             //...smartContractInitialized = false --> first time someone interacts with the smart contract,
             //                                        display "I am the team leader form".
@@ -151,30 +148,49 @@ App = {
               App.displayFirstInteractionForm();
               return;
             }            
-            
-            //TODO: you are not part of the system control
-
             //...smartContractInitialized = true --> the smart contact has been already initialized.
-            //                                       Hence, we can get the role of the present user.
+
+            // check whether or not the user is part of the team
+            if(App.blockchainid==-1){
+              let result = await App.setBlockchainId();  // check if the user is in the team
+              if(result==-1){
+                console.log("you are not part of the team");
+                App.displayNotInTeam_homepage();
+                return;
+              }
+            }
+
+            // logout button
+            accountaddress.innerHTML = `
+              <ul class="navbar-nav">
+                <li class="nav-item">
+                <a class="nav-link" href="#" onclick='App.displayProfile();'>
+                <span class="material-symbols-outlined" id='menuicon'>account_circle</span>
+                <span id="account"></span>
+                </a>
+                </li>
+              </ul>
+              <button type="button" class="btn btn-danger position-relative" onclick="App.disconnectMetamask();">Logout</button>`;
+            
+            // get user data from the database
+            let user_data = await App.getUserInfo(App.blockchainid);
+            account.innerHTML = `${user_data["name"]} ${user_data["surname"]}`;
+
+            // get the role of the present user.
             let userRole = await instance.getMyRole({from: App.account});
             App.role = userRole;
+
             if(App.role === 'tl'){
               menuicon.innerHTML = "supervisor_account";
             }
-            
-            // retrive user id
-            let res = await instance.getMyUserId({from: App.account});
-            let memberid = res.toNumber();
-
-            // get user data from the database
-            let user_data = await App.getUserInfo(memberid);
-            account.innerHTML = `${user_data["name"]} ${user_data["surname"]}`;
-          }).catch(function(err){
-            console.log("error:")
-            console.log(err.message);
+          }).catch((error) => {
+            console.log(error, error.code);
+            errorMsg.innerHTML = `
+              <div class="alert alert-danger" role="alert" style="width: 20%">
+                Something went wrong loading the smart contracts.
+              </div>`;
           });
-        })
-        .catch((error) => {
+        }).catch((error) => {
           console.log(error, error.code);
           errorMsg.innerHTML = `
             <div class="alert alert-danger" role="alert" style="width: 20%">
@@ -189,9 +205,20 @@ App = {
   },
 
   //List the certificates which is owned by the current user
-  displayCertificates: function(user_address, blockchain_id){
+  displayCertificates: async function(user_address, blockchain_id){
     App.showSpinner();
     if(App.account){
+
+      // check if the user is part of the team
+      if(App.blockchainid==-1){
+        let result = await App.setBlockchainId();  // check if the user is in the team
+        if(result==-1){
+          console.log("you are not part of the team");
+          App.displayNotInTeam();
+          return;
+        }
+      }
+
       App.contracts.Certificate.deployed().then(function(instance){
         certificateInstance = instance;       
         if(user_address==undefined){ 
@@ -208,9 +235,9 @@ App = {
           <br>
           <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
         ` : `
-          <button id='back' class='btn btn-primary' onclick="App.displayTeam();">Back</button>
-          <br>
-          <p>You are viewing the certificates of user <strong>${data_user["name"]} ${data_user["surname"]}</strong></p>
+          <h2 class="display-4">Certificates</h2>
+          <p class="lead">Certificates of user <strong>${data_user["name"]} ${data_user["surname"]}</strong></p>
+          <button id='back' class='btn btn-link' onclick="App.displayTeam();">Go back to team member list</button>
           <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
         ` 
         
@@ -266,11 +293,10 @@ App = {
                 break;
             }
                
-
             if(user_address==undefined){ 
               $("#certificateList").append(`
                 <div class="col-mb-4">
-                  <div class="card" style="width: 25rem;">
+                  <div class="card mt-3" style="width: 30rem; height: 50rem; overflow-y: auto;">
                     <img src=`+image_link+` class="card-img-top">
                     <div class="card-body">
                     <h5 class="card-title">`+name+`</h5>
@@ -295,8 +321,8 @@ App = {
             } else {
               $("#certificateList").append(`
                 <div class="col-mb-4">
-                  <div class="card" style="width: 25rem;">
-                    <img src="images/defaultCertificateIcon.png" class="card-img-top">
+                  <div class="card mt-3" style="width: 30rem; height: 50rem; overflow-y: auto;">
+                    <img src=`+image_link+` class="card-img-top">
                     <div class="card-body">
                     <h5 class="card-title">`+name+`</h5>
                     <p class="card-text">`+description+`</p>
@@ -389,12 +415,12 @@ App = {
         resultAlert.addClass("alert")
 
         if(mint) {
-          resultAlert.addClass("alert-success")
-          resultAlert.text("The certificate has been uploaded")
+          resultAlert.addClass("alert-success");
+          resultAlert.text("The certificate has been uploaded");
           App.hideSpinner();
         } else {
-          resultAlert.addClass("alert-danger")
-          resultAlert.text("An error occured while uploading the certificate")
+          resultAlert.addClass("alert-danger");
+          resultAlert.text("An error occured while uploading the certificate");
           App.hideSpinner();
         }
       })
@@ -403,7 +429,6 @@ App = {
         console.error(error);
       });
     }
-    
   },
 
   // create new certificate
@@ -449,6 +474,17 @@ App = {
   displayProfile: async function(){
     App.showSpinner();
     if(App.account){
+
+      // check if the user is part of the team
+      if(App.blockchainid==-1){
+        let result = await App.setBlockchainId();  // check if the user is in the team
+        if(result==-1){
+          console.log("you are not part of the team");
+          App.displayNotInTeam();
+          return;
+        }
+      }
+
       let role = "";
       let account_name= "";
       
@@ -459,7 +495,7 @@ App = {
         if(contractRole === "tl"){
           role = "You are the <strong>team leader</strong>";
         } else {
-          role = "You are <b>not</b> the team leader";
+          role = "You are <b>not</b> the team leader";  //TODO: descrizioni dei ruoli più complete
         }
         console.log(role);console.log(contractRole);
         //...end get account role
@@ -497,19 +533,19 @@ App = {
 
           // for each retrived certificate id we need to
           // check whether or not it is valid
-          cert_valid = await instance.tokenIsValid.call(token_id);
+          cert_valid = await instance.tokenIsValid.call(token_id, {from: App.account});
           cert_obj.valid = cert_valid;
           console.log("valid: "+cert_valid);
           
           // get the creation date of each retrived
           // certificate in order to select the
           // (max 3) most recent certificates
-          cert_creationDate = await instance.getCreationDate.call(token_id);
+          cert_creationDate = await instance.getCreationDate.call(token_id, {from: App.account});
           cert_obj.date_creation = cert_creationDate;
           console.log("creation date: "+cert_creationDate);
 
           // get token uri
-          cert_uri = await instance.tokenURI.call(token_id);
+          cert_uri = await instance.tokenURI.call(token_id, {from: App.account});
           cert_obj.uri = cert_uri;
           console.log(cert_uri);
 
@@ -690,14 +726,29 @@ App = {
     App.showSpinner();
     if(App.account){
       let eagleContractInstance = await App.contracts.Eagle.deployed();
-      let members = await eagleContractInstance.getTeamMembers();
+
+      // check the user is part of the team
+      if(App.blockchainid==-1){
+        let result = await App.setBlockchainId();  // check if the user is in the team
+        if(result==-1){
+          console.log("you are not part of the team");
+          App.displayNotInTeam();
+          return;
+        }
+      }
+
+      let members = await eagleContractInstance.getTeamMembers({from: App.account});
       console.log(members);
-      let role = await eagleContractInstance.getMemberRole(App.account);
+      let role = await eagleContractInstance.getMyRole({from: App.account});
       if(role!='tl' && role!='unknown'){
         mainContent.innerHTML = `
-          <span>You are not a <strong>Team Leader</strong>. You cannot see the content of this page.</span><br>
-          <span>You can click any other element in the menu to use the application.</span>
-        `
+        <img src="images/permissionDenied.png" style="width=200px;"/>
+        <div class="alert alert-danger" style="width:30%;">
+          You are not a <strong>Team Leader</strong>. You cannot see the content of this page.
+        </div>
+        <br>
+        <h6>You can click any other element in the menu to use the application.</h6>
+        `;
       } else {
         mainContent.innerHTML = `
           <div class='form-row'>
@@ -750,7 +801,7 @@ App = {
               let user_surname = users[teamMember]["surname"];
               let user_id = users[teamMember]["blockchain_id"];
 
-              role = await eagleContractInstance.getMemberRole(members[teamMember]);
+              role = await eagleContractInstance.getMemberRole(members[teamMember], {from: App.account});
               if(role === "tl"){
                 document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>Show certificates</button></div><br>`;
               } else {
@@ -929,7 +980,8 @@ App = {
         console.log("result: "+result);
 
         // get the blockchain id of the just inserted user and update the database
-        let blockchain_id = await instance.getUserId(userWalletAddress);
+        let blockchain_id = await instance.getUserId(userWalletAddress, {from: App.account});
+
         fetch('../api/v1/users', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
@@ -1035,7 +1087,7 @@ App = {
 getWalletFromId: async function(blockchain_id) {    
   var wallet = -1;
   let eagleContractInstance = await App.contracts.Eagle.deployed();     
-  await eagleContractInstance.getUserWallet(blockchain_id).then(function (result) {
+  await eagleContractInstance.getUserWallet(blockchain_id, {from: App.account}).then(function (result) {
     wallet = result;
   }).catch(function(err){
     console.log("error:")
@@ -1067,78 +1119,71 @@ getCourses: function(userId){
   var courses_text="";
   var courses_text_sub="";
   
-
-
   fetch('../api/v1/courses')
   .then((resp) => resp.json()) //transform data into JSON
   .then(function(data) {
 
-      for (var i = 0; i < data.length; i++){ // iterate overe recived data and write the course
-                                             // under courses or current subscription whether the
-                                             // current user is subscribed or not
-          var course = data[i];
+    for (var i = 0; i < data.length; i++){ // iterate overe recived data and write the course
+                                            // under courses or current subscription whether the
+                                            // current user is subscribed or not
+      var course = data[i];
 
-          console.log(course);
+      let title = course["title"];
+      let description = course["description"];
+      let self = course["self"];
+      let date = course["date"].split('T')[0];
+      let users = course["users"];
+      let self_id = self.substring(self.lastIndexOf('/') + 1);
 
-          let title = course["title"];
-          let description = course["description"];
-          let self = course["self"];
-          let date = course["date"].split('T')[0];
-          let users = course["users"];
-          let self_id = self.substring(self.lastIndexOf('/') + 1);
-
-          var buttons = "";
-         
-          // Display edit and delete button to certain roles
-          if(App.role != "std") {
-            buttons = 
-              `<button class="btn btn-danger" onclick="App.deleteCourse('`+self_id+`')">Delete</button>
-              <button class="btn btn-warning" onclick="App.displayEditCourse('`+self_id+`')">Edit</button>
-            `;
-          }
-
-          buttons += 
-              `</div>
-              </div>
-            `;
-
-          // Display the courses
-          if(users.includes(Number(userId))){ // user already subscribed to the course
-            courses_text_sub += `
-              <div class="card my-2" style="width: 30rem;">
-                <div class="card-body">
-                  <h5 class="card-title">`+title+`</h5>
-                  <p class="card-text">`+description+`</p>
-                </div>
-                <ul class="list-group list-group-flush">
-                  <li class="list-group-item"><b>Date: </b>`+date+`</li>
-                </ul>
-                <div class="card-body" id="courseControl-`+self_id+`">
-                  <button class="btn btn-secondary" onclick="App.courseRemovePartecipant('`+self_id+`', '`+App.blockchainid+`')">Unsubscribe</button>                  
-            `;
-
-            courses_text_sub += buttons;
-            
-          }else{  // user is not subscribed yet
-            courses_text += `
-              <div class="card my-2" style="width: 30rem;">
-                <div class="card-body">
-                  <h5 class="card-title">`+title+`</h5>
-                  <p class="card-text">`+description+`</p>
-                </div>
-                <ul class="list-group list-group-flush">
-                  <li class="list-group-item"><b>Date: </b>`+date+`</li>
-                </ul>
-                <div class="card-body" id="courseControl-`+self_id+`">
-                  <button class="btn btn-success" onclick="App.courseAddPartecipant('`+self_id+`', '`+App.blockchainid+`')">Subscribe</button>                                
-            `;
-
-            courses_text += buttons;
-          }
-      }
-      html_courses.innerHTML += courses_text;
-      html_courses_sub.innerHTML += courses_text_sub;
+      var buttons = "";
       
+      // Display edit and delete button to certain roles
+      if(App.role != "std") {
+        buttons = 
+          ` <button class="btn btn-danger" onclick="App.deleteCourse('`+self_id+`')">Delete</button>
+            <button class="btn btn-warning" onclick="App.displayEditCourse('`+self_id+`')">Edit</button>
+          `;
+      }
+
+      // Display the courses
+      if(users.includes(Number(userId))){ // user already subscribed to the course
+        courses_text_sub += `
+          <div class="card my-2" style="width: 30rem;">
+            <div class="card-body">
+              <h5 class="card-title">`+title+`</h5>
+              <p class="card-text">`+description+`</p>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item"><b>Date: </b>`+date+`</li>
+            </ul>
+            <div class="card-body" id="courseControl-`+self_id+`">
+              <button class="btn btn-secondary" onclick="App.courseRemovePartecipant('`+self_id+`', '`+App.blockchainid+`')">Unsubscribe</button>                  
+        `;
+
+        courses_text_sub += buttons;
+        courses_text_sub += `</div></div>`;
+        
+      }else{  // user is not subscribed yet
+        courses_text += `
+          <div class="card my-2" style="width: 30rem;">
+            <div class="card-body">
+              <h5 class="card-title">`+title+`</h5>
+              <p class="card-text">`+description+`</p>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item"><b>Date: </b>`+date+`</li>
+            </ul>
+            <div class="card-body" id="courseControl-`+self_id+`">
+              <button class="btn btn-success" onclick="App.courseAddPartecipant('`+self_id+`', '`+App.blockchainid+`')">Subscribe</button>                                
+        `;
+
+        courses_text += buttons;
+        courses_text += `</div></div>`;
+      }
+    }
+    html_courses.innerHTML += courses_text;
+    html_courses_sub.innerHTML += courses_text_sub;
+    
   })
   .catch( error => console.error(error) ); //catch dell'errore
 },
@@ -1322,7 +1367,13 @@ getUserInfo: async function(blockchain_id){
 // display error message if the user
 // is not in the team yet
 displayNotInTeam: function(){
-  mainContent.innerHTML = `<p>Sorry, you are not in the team yet. Ask the team leader to register yourself.</p>`;
+  mainContent.innerHTML = `
+    <img src="images/error.png" style="width: 200px;"/>
+    <div class="alert alert-danger" role="alert" style="width: 25%;">
+    Sorry, you are not in the team yet. Ask the team leader to register yourself.
+    </div>`;
+  accountaddress.innerHTML = ``;
+  App.hideSpinner(); 
 },
 
 displayEditCourse: function(course_id){
@@ -1499,6 +1550,13 @@ displayFirstInteractionForm: function(){
   `;
 },
 
+displayNotInTeam_homepage: function(){
+  var output_html = document.getElementById("firstInteractionForm");
+  output_html.innerHTML = `
+  <p class="lead">It seems, <b>you are not part of the team</b>. In order to use our service, ask the team leader to register yourself.</p>
+  `;
+},
+
 /**===========*/
 
 /**===SPINNER===*/
@@ -1544,6 +1602,8 @@ disconnectMetamask: async function(){
   if(App.account){
     window.localStorage.clear();
     App.account = null;
+    App.blockchainid = -1;
+    App.role = null;
     App.displayConnectMetamask();
   }
   App.hideSpinner();
