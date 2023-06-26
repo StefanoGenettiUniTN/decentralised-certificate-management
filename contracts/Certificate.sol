@@ -11,7 +11,7 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
 
-    address private eagleAddress;   // TODO: creare smart contract astratto
+    address private eagleAddress;
 
     // struct representing certificate information
     struct CertificateItem {
@@ -142,7 +142,7 @@ contract Certificate is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
         uint256 currentIndex = 0;
         for (uint256 i = 0; i < numberOfExistingTokens; i++) {
             uint256 tokenId = i;
-            if(!_exists(tokenId)) continue; // the token does not exist anymore //TODO: risolvere in altro modo
+            if(!_exists(tokenId)) continue; // the token does not exist anymore
             if (ownerOf(tokenId) != user) continue;
             ownedTokenIds[currentIndex] = tokenId;
             currentIndex += 1;
