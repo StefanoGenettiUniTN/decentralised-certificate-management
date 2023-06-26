@@ -11,7 +11,17 @@ contract Eagle {
     Counters.Counter private _certificateItemId;
     Counters.Counter private _userItemId;
 
+    bool private team_leader_init;  // once the smart contract is deployed team_leader_init=false.
+                                    // When the team leader is initialized, team_leader_init is set to true.
+
     enum Role{ UNKNOWN, TEAM_LEADER, LEADER, SECRETARIAT, STANDARD}
+
+    /**=============EVENTS=============*/
+
+    // this event is emitted when the Certificate smart contract address is initialized
+    event SetCertificateSmartContractAddress(address certificateSmartContractAddress);
+
+    /**================================*/
 
     address private nftSmartContractAddress;
 
@@ -19,19 +29,11 @@ contract Eagle {
     mapping(address => uint256) private userAddressToUserId;
     mapping(uint256 => address) private userIdToUserAddress;
     mapping(address => Role) private userAddressToRole;
-    mapping(address => address) private userAddressToLeader;    // each standard team member belongs to an area with an associated leader
+    mapping(address => uint256) private userAddressToArea;      // each team member belongs to an area
     mapping(uint256 => address) private areaIdToLeader;         // each area is identified by a numerical id and each area has an associated leader 
 
     constructor(){
-        // the user who deploys the smart contract the first
-        // time has team leader privileges. Hence, it can
-        // potentially add a new team leader
-        _userItemId.increment();
-        uint256 userId = _userItemId.current();
-        userAddressToUserId[msg.sender] = userId;
-        userIdToUserAddress[userId]=msg.sender;
-
-        userAddressToRole[msg.sender] = Role.TEAM_LEADER;
+        team_leader_init=false;
     }
 
     // when the smart contract of our customer is deployed
@@ -40,6 +42,28 @@ contract Eagle {
     function setCertificateAddress(address _certificateAddress) public {
         require(nftSmartContractAddress == address(0), "Certificate address already set");
         nftSmartContractAddress = _certificateAddress;
+        emit SetCertificateSmartContractAddress(nftSmartContractAddress);
+    }
+
+    // Check whether the first team leader has been
+    // already registered or not
+    function systemInitialized() public view returns (bool){
+        return team_leader_init;
+    }
+    
+    // Add team leader first time
+    function addFirstTeamLeader() public returns (uint256){
+        require(team_leader_init==false, "This function can only be called once.");
+        _userItemId.increment();
+        uint256 userId = _userItemId.current();
+        userAddressToUserId[msg.sender] = userId;
+        userIdToUserAddress[userId] = msg.sender;
+        userAddressToArea[msg.sender] = 1;
+        userAddressToRole[msg.sender] = Role.TEAM_LEADER;
+
+        team_leader_init = true;
+
+        return userId;
     }
 
     // Add a team member
@@ -68,7 +92,7 @@ contract Eagle {
             areaIdToLeader[area] = userWallet;
         }
 
-        userAddressToLeader[userWallet] = areaIdToLeader[area];
+        userAddressToArea[userWallet] = area;
 
         return userId;
     }
@@ -89,7 +113,7 @@ contract Eagle {
     }
 
     // Get sender role
-    function getMemberRole() public view returns (string memory){
+    function getMyRole() public view returns (string memory){
         require(userAddressToUserId[msg.sender]!=0, "you are not a team member");    // the user must be already added in the team
         Role userRole = userAddressToRole[msg.sender];
         if (Role.TEAM_LEADER == userRole) return "tl";
@@ -111,7 +135,7 @@ contract Eagle {
     }
 
     // Get user id of the sender
-    function getUserId() public view returns (uint256){
+    function getMyUserId() public view returns (uint256){
         require(userAddressToUserId[msg.sender]!=0, "you are not a team member");    // the user must be already added in the team
         return userAddressToUserId[msg.sender];
     } 
@@ -122,15 +146,14 @@ contract Eagle {
 
         require(    userAddressToRole[msg.sender] == Role.TEAM_LEADER ||
                     userAddressToRole[msg.sender] == Role.SECRETARIAT ||
-                    (userAddressToRole[msg.sender] == Role.LEADER && userAddressToLeader[userWallet]==msg.sender),
+                    (userAddressToRole[msg.sender] == Role.LEADER && areaIdToLeader[userAddressToArea[userWallet]]==msg.sender),
                     "Permission denied.");
         return userAddressToUserId[userWallet];
     }
 
     // Get user wallet of the sender
-    function getUserWallet() public view returns (address){
-        require(userAddressToUserId[msg.sender]!=0, "you are not a team member");                             // the user must be already added in the team
-        require(userIdToUserAddress[userAddressToUserId[msg.sender]]!=address(0), "invalid parameter");       // the input user must be already added in the team
+    function getMyUserWallet() public view returns (address){
+        require(userAddressToUserId[msg.sender]!=0, "you are not a team member");   // the user must be already added in the team
         uint256 senderId = userAddressToUserId[msg.sender];       
         return userIdToUserAddress[senderId];
     } 
@@ -141,7 +164,7 @@ contract Eagle {
 
         require(    userAddressToRole[msg.sender] == Role.TEAM_LEADER ||
                     userAddressToRole[msg.sender] == Role.SECRETARIAT ||
-                    (userAddressToRole[msg.sender] == Role.LEADER && userAddressToLeader[userIdToUserAddress[userId]]==msg.sender),
+                    (userAddressToRole[msg.sender] == Role.LEADER && areaIdToLeader[userAddressToArea[userIdToUserAddress[userId]]]==msg.sender),
                     "Permission denied.");
         
         return userIdToUserAddress[userId];

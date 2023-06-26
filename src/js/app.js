@@ -111,20 +111,20 @@ App = {
               <p class="lead">This is the minimum value product of our service. Any feedback is more than welcome!</p>
               <p class="lead"><i>Eros Ribaga, Stefano Genetti, Pietro Fronza</i></p>
               <hr class="my-4">
-              <p class="lead">
-                <div class="alert alert-success" role="alert" style="width: 30rem;">
-                  Wallet successfully connected!
-                </div>
-                <p><b>Wallet address:</b> ${App.account}</p>
-                <p>Explore the content of the DApp using the navigation bar. For any doubt, do not esitate to contact us!</p>
-                <div class="card" style="width: 30rem;">
-                  <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@studenti.unitn.it</li>
-                    <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@studenti.unitn.it</li>
-                    <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@studenti.unitn.it</li>
-                  </ul>
-                </div>
-              </p>
+              <div class="alert alert-success" role="alert" style="width: 30rem;">
+                Wallet successfully connected!
+              </div>
+              <p><b>Wallet address:</b> ${App.account}</p>
+              <span id="firstInteractionForm">
+              <p>Explore the content of the DApp using the navigation bar. For any doubt, do not esitate to contact us!</p>
+              <div class="card" style="width: 30rem;">
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@studenti.unitn.it</li>
+                  <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@studenti.unitn.it</li>
+                  <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@studenti.unitn.it</li>
+                </ul>
+              </div>
+              </span>
             </div>
           `;
 
@@ -133,11 +133,23 @@ App = {
 
         })
         .then( () => {
-          App.contracts.Eagle.deployed().then(function(instance){
-            return instance.getMemberRole(App.account);       
-          }).then(function(result){
-            App.role = result;
-            console.log("account role: "+App.role);
+          App.contracts.Eagle.deployed().then(async function(instance){
+            // check if the current user is performing the first interaction
+            // with the smart contract
+            let smartContractInitialized = await instance.systemInitialized();
+
+            //...smartContractInitialized = false --> first time someone interacts with the smart contract,
+            //                                        display "I am the team leader form".
+            if(smartContractInitialized==false){
+              console.log("first interaction with the smart contract. Mandatory to register a team leader.");
+              App.displayFirstInteractionForm();
+              return;
+            }            
+            
+            //...smartContractInitialized = true --> the smart contact has been already initialized.
+            //                                       Hence, we can get the role of the present user.
+            let userRole = await instance.getMyRole({from: App.account});
+            App.role = userRole;       
           }).catch(function(err){
             console.log("error:")
             console.log(err.message);
@@ -759,7 +771,7 @@ App = {
       EagleInstance = instance;
 
       try {        
-        let result = await EagleInstance.addTeamMember(userWalletAddress, userRole, {from: App.account});
+        let result = await EagleInstance.addTeamMember(userWalletAddress, userRole, 1, {from: App.account});
         App.displayTeam();
       }catch(err){
         console.log("error:")
@@ -848,6 +860,20 @@ getWalletFromId: async function(blockchain_id) {
   var wallet = -1;
   let eagleContractInstance = await App.contracts.Eagle.deployed();     
   await eagleContractInstance.getUserWallet(blockchain_id).then(function (result) {
+    wallet = result;
+  }).catch(function(err){
+    console.log("error:")
+    console.log(err.message);
+  });
+
+  return wallet;    
+},
+
+// get wallet address of the current user
+getWallet: async function(blockchain_id) {    
+  var wallet = -1;
+  let eagleContractInstance = await App.contracts.Eagle.deployed();     
+  await eagleContractInstance.getMyUserWallet({from: App.account}).then(function (result) {
     wallet = result;
   }).catch(function(err){
     console.log("error:")
@@ -1220,7 +1246,12 @@ displayUploadCertificateForm: async function(owner=undefined, from=undefined){
       owner = App.blockchainid;
     }
 
-    var wallet = await App.getWalletFromId(owner);  //get wallet address from user blockchain id     
+    var wallet;
+    if(from){ // from = course title from which we create the current certificate
+      wallet = await App.getWalletFromId(owner);  //get wallet address from user blockchain id     
+    }else{
+      wallet = await App.getWallet(); //get wallet address 
+    }
     $('#certificate-owner').val(wallet);
 
     if(from){ // from = course title from which we create the current certificate
@@ -1235,6 +1266,25 @@ displayUploadCertificateForm: async function(owner=undefined, from=undefined){
   }
 },
 
+displayFirstInteractionForm: function(){
+  var output_html = document.getElementById("firstInteractionForm");
+  output_html.innerHTML = `
+  <p class="lead">This is the first interaction with the distributed application. If you are reading this message, the smart contracts, the hearth of the backend of our distributed service, have been deployed but no user has been added to the blockchain yet. In order to use the service, the system has to be initialized. Please register yourself. After the registration process, please reload the current webpage.</p>
+  <form>
+    <div class="form-group">
+      <label for="firstTeamLeaderName">Name</label>
+      <input type="text" class="form-control" id="firstTeamLeaderName" placeholder="Enter your first name">
+    </div>
+    <div class="form-group">
+      <label for="firstTeamLeaderSurname">Surname</label>
+      <input type="text" class="form-control" id="firstTeamLeaderSurname" placeholder="Enter your second name">
+    </div>
+    <button type="button" class="btn btn-primary mb-4" onclick="App.initFirstUser()" id="btn-add-course">Initialize DApp</button>
+  </form>
+  <div id="initSuccess"></div>  
+  `;
+},
+
 /**===========*/
 
 /**===CONTROLLER===*/
@@ -1246,9 +1296,8 @@ displayUploadCertificateForm: async function(owner=undefined, from=undefined){
 // to -1.
 setBlockchainId: async function (){
   let result = await App.contracts.Eagle.deployed().then(async function(instance){
-    EagleInstance = instance;
     try {
-      let result = await EagleInstance.getMyUserId({from: App.account});
+      let result = await instance.getMyUserId({from: App.account});
       App.blockchainid = result.toNumber();
     }catch(err){
       return -1;
@@ -1259,7 +1308,35 @@ setBlockchainId: async function (){
   });
 
   return result;
-}
+},
 
+initFirstUser: function(){
+  
+  // TODO: add a method in the model to add the user in the database
+
+  App.contracts.Eagle.deployed().then((instance) =>{
+    return instance.addFirstTeamLeader({from: App.account});
+  }).then(function(){
+    // TODO: spostare questo display in view?
+    var output_html = document.getElementById("initSuccess");
+    output_html.innerHTML = `
+    <div class="alert alert-success" role="alert">
+      Excellent! Please refresh the page to start using our service.
+    </div>
+    `;
+    console.log("success");
+  }).catch(function(err){
+    console.log("error:")
+    console.log(err.message);
+
+    // TODO: spostare questo display in view?
+    var output_html = document.getElementById("initSuccess");
+    output_html.innerHTML = `
+    <div class="alert alert-danger" role="alert">
+      Something went wrong )-:
+    </div>
+    `;
+  });
+}
 /**===========*/
 };
