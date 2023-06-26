@@ -1,31 +1,65 @@
 # Blockchain course project 2023: Enhancing Certificate Management through Blockchain Technology
-## University of Trento
-## Academic year: 2022-2023
-### Eros Ribaga, Pietro Fronza, Stefano Genetti
+### University of Trento
+### Academic year: 2022-2023 
 
+# 📕 Table of contents
+- Introduction
+- Repository structure
+- Built with
+- Run the Dapp
+
+# 📝 Introduction
+This Dapp was built as a study project for the **Blockchain course** by:
+- Eros Ribaga
+- Pietro Fronza
+- Stefano Genetti
+  
+This project aims to create a Dapp that can improve the workflow in organizing the certificate of the members of a group, such as a team or a company.
+To address the problem we used a hybrid system, that utilizes both a distributed and a centralized service.
+
+**Note:** This repository contains an example of a solution developed exclusively for the E-agle team of the University of Trento.
+
+#### Distributed part
+This part consists in:
+- Certificate smart contract
+- E-agle smart contract
+- IPFS
+
+The **certificate smart contract** manages the certificates, represented as NFTs, uploaded/minted by the users or the leader.
+The **E-agle smart contract** manages the roles of the users.
+**IPFS** is used to store the PDFs of the certificates and the metadata describing it. The files are pinned using Pinata.
+
+#### Centralized part
+Consists only of an **express** server which is used to interact with Pinata.
+
+<p align="center">
+  <img alt="Architecture" height="500" src="https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/ed66b9d3-4344-4bcb-b89b-c91def46a438">
+<p />
+
+
+# 🛰 Repository structure
 #### branch: develop
 
-The purpose of this branch is to facilitate the collaboration among the team members throughout the development process. For the latest official and stable release of our solution, please refer to the `main` branch.
-From this branch other branches are created to experiment with specific functionalities.
-
-### branch: nft-experiment
-
-In this branch we are going to learn how to create an nft smart contract and to interact with it.
-
-# 🛰 Project structure
-![Blockchain flow](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/8a090a36-9ce2-4eeb-8a9d-530299d8df86)
+The purpose of this branch is to facilitate collaboration among the team members throughout the development process. For our solution's latest official and stable release, please refer to the `main` branch.
+From this branch, other branches are created to experiment with specific functionalities.
 
 # ⚙ Built with
-This project was made with the following technologies
+This project was done with the following technologies
 ### Frontend
 - [Web3.js](https://web3js.readthedocs.io/en/v1.3.4/)
 
 ### Backend
+- [Express](https://expressjs.com/pt-br/)
+- [Multer](https://github.com/expressjs/multer)
+- [Axios](https://axios-http.com/docs/intro)
+- [Pinata](https://www.pinata.cloud/)
 
+### Blockchain and Smart Contracts
+- [Solidity](https://docs.soliditylang.org/en/v0.8.20/)
+- [Ganache](https://trufflesuite.com/ganache/)
+- [Truffle](https://trufflesuite.com/)
 
-### Blockchain and Smart Contracts <sub><sup>Solidity</sup></sub>
-
-# 🕹 Run the Dapp locally
+# 🕹 Run the Dapp
 ### Requirements
 To run this application you will need:
 - [Node](https://nodejs.org/en)
