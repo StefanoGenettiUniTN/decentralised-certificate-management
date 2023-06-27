@@ -273,8 +273,10 @@ App = {
 
             let date_expiration_html = (date_expiration=='undefined') ? '' : `<li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>`;
             let delete_btn = `<button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>`;
-            let validity_btn = (cert_valid) ? `<button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`')">Invalidate</button>` : `<button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`')">Set valid</button>`
-            let validity_html = (cert_valid) ? `<li class="list-group-item list-group-item-success"><b>validity: </b>`+cert_valid+`</li>` : `<li class="list-group-item list-group-item-danger"><b>validity: </b>`+cert_valid+`</li>`
+            let validity_btn = (cert_valid) ? `<button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`')">Invalidate</button>` : 
+                                              `<button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`')">Set valid</button>`;
+            let validity_html = (cert_valid) ? `<li class="list-group-item list-group-item-success"><b>validity: </b>`+cert_valid+`</li>` : 
+                                               `<li class="list-group-item list-group-item-danger"><b>validity: </b>`+cert_valid+`</li>`;
             let image_link = "images/";
             switch (category){
               case 'DFLT':
@@ -313,10 +315,9 @@ App = {
                       <li class="list-group-item"><b>category: </b>`+category+`</li>
                       `+validity_html+`
                     </ul>
-                    <div class="card-body">
+                    <div class="card-body" id="cert-card-` + token_id + `">
                       <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
-                      `+ delete_btn +`
-                      `+ validity_btn +`
+                      `+ delete_btn + `
                     </div>
                   </div>
                 </div>
@@ -337,14 +338,18 @@ App = {
                       <li class="list-group-item"><b>category: </b>`+category+`</li>
                       `+validity_html+`
                     </ul>
-                    <div class="card-body">
+                    <div class="card-body" id="cert-card-` + token_id + `">
                       <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
-                      ` + validity_btn + `
                     </div>
                   </div>
                 </div>
                 `);
             }
+
+            if(App.checkPermission(undefined, leader=true)) {
+              $("#cert-card-"+ token_id).append(validity_btn)
+            }
+
           }).fail(function(err) { alert('getJSON request failed! ');}); //TODO: prepare more meaningful error handling
           //...end JSON parsing
         }
@@ -361,7 +366,7 @@ App = {
   },
 
   uploadCertificate: function() {    
-    App.showSpinner();
+    
     // Check if all required inputs field have been compiled
     var valid = true;
     var inputs = document.getElementsByClassName("upload-form");
@@ -372,7 +377,8 @@ App = {
       }      
     }
     
-    if(valid) {           
+    if(valid) {  
+      App.showSpinner();         
       //Get all the information
       const name = $('#certificate-name').val();
       const description = $('#certificate-description').val();
@@ -431,6 +437,7 @@ App = {
         console.error(error);
       });
     }
+
   },
 
   // create new certificate
@@ -1008,6 +1015,12 @@ App = {
       let user_surname = $("#memberSurname").val();
       let userRole = $("#memberRole").val();
       let userArea = $("#memberArea").val();
+
+      if(userRole == "1" && !App.checkPermissionAddTeamLeader()) {
+        document.getElementById("errorMsg").innerHTML = "You do not have the permission to add a team leader";
+        App.hideSpinner();
+        return;
+      }
 
       App.contracts.Eagle.deployed().then(async function(instance){
         try {
@@ -1691,9 +1704,15 @@ initFirstUser: function(){
   });
 }, 
 
-checkPermission(areaid, ct = false) {
-  if(App.role == "tl" || App.role == "sec" || App.role == 'unknown') return true;
-  if(App.role == "ct" && areaid == App.areaid || App.role == "ct" && ct) return true;
+checkPermissionAddTeamLeader() {
+  return (App.role == "tl");
+},
+
+checkPermission(areaid, leader = false) {
+  if(App.role == "tl" || App.role == "sec") return true;
+
+  //the leader has the permission if the specified are is its own or if it is given with the leader parameter
+  if( (App.role == "ct" && areaid == App.areaid) || (App.role == "ct" && leader) ) return true; 
 
   return false;
 }
