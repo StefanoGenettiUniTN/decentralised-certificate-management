@@ -660,6 +660,10 @@ App = {
       }
       //...
 
+      // get user name from the database
+      let user_data = await App.getUserInfo(App.blockchainid);
+      account_name = user_data["name"] + " " + user_data["surname"];
+
       // display profile card
       mainContent.innerHTML = `
       <div class="container-fluid">
@@ -793,10 +797,14 @@ App = {
           </div>
         `;
           
+        // Save areas to display them for each member
+        var areas = undefined;
+
         fetch('../api/v1/areas')
         .then((resp)=>resp.json())
         .then(function(data){
           for(let i=0; i<data.length;i++){
+            areas = data;
             var area = data[i];
             document.getElementById('memberArea').innerHTML += `
               <option value="${area["area_id"]}">${area["name"]}</option>
@@ -815,7 +823,6 @@ App = {
           }
         }
 
-        console.log(App.areaid)
 
         fetch('../api/v1/users')
           .then((res) => res.json())
@@ -828,11 +835,36 @@ App = {
 
               role = await eagleContractInstance.getMemberRole(members[teamMember], {from: App.account});
               if(App.checkPermission(user_area) && user_id != App.blockchainid) {
-                if(role === "tl"){
-                  document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>Show certificates</button></div><br>`;
-                } else {
-                  document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">account_circle</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>Show certificates</button></div><br>`;
+
+                var icon = "";
+                
+                switch (role) {
+                  case "tl":                    
+                    icon = '<span class="material-symbols-outlined">star</span>'
+                    break;
+                  case "sec":
+                    icon = '<span class="material-symbols-outlined">receipt_long</span>';
+                    break;
+                  case "ct":
+                    icon = '<span class="material-symbols-outlined">supervisor_account</span>';
+                    break;
+                  default:
+                    icon = '<span class="material-symbols-outlined">account_circle</span>'; 
+                    break;
                 }
+               
+                document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'> ` 
+                                                                  + icon + 
+                                                                  ` <span id='address'>`+members[teamMember]+`</span>
+                                                                    \xa0\xa0<span> | </span> \xa0\xa0   
+                                                                    <span>`+areas[user_area-1]["name"]+`</span>                                                                   
+                                                                    \xa0\xa0<span> | </span> \xa0\xa0   
+                                                                    <span>`+user_name+`</span>  
+                                                                    <span>`+user_surname+`</span>\xa0\xa0
+                                                                    <button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>
+                                                                      Show certificates
+                                                                    </button>
+                                                                  </div><br>`;                      
               }              
             }            
           })        
