@@ -3,10 +3,12 @@ App = {
   account: null,        // wallet address
   contracts: {},        // dapp smart contracts
   blockchainid: -1,     // user blockchain integer identifier
+  areaid: -1,
   role: null,           // user role in the system:
-                        //  tl  ::  team leader
-                        //  std ::  standard user 
-
+                        //  tl :: team leader
+                        //  sec :: secretary
+                        //  ct  :: leader
+                        //  std :: standard user 
   init: function() {
     console.log("Initialization function")
     App.showSpinner();
@@ -270,6 +272,8 @@ App = {
             let issuing_authority = result.issuing_authority;
 
             let date_expiration_html = (date_expiration=='undefined') ? '' : `<li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>`;
+            let delete_btn = `<button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>`;
+            let validity_btn = (cert_valid) ? `<button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`')">Invalidate</button>` : `<button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`')">Set valid</button>`
             let validity_html = (cert_valid) ? `<li class="list-group-item list-group-item-success"><b>validity: </b>`+cert_valid+`</li>` : `<li class="list-group-item list-group-item-danger"><b>validity: </b>`+cert_valid+`</li>`
             let image_link = "images/";
             switch (category){
@@ -311,9 +315,8 @@ App = {
                     </ul>
                     <div class="card-body">
                       <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
-                      <button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>
-                      <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`')">Invalidate</button>
-                      <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`')">Set valid</button>
+                      `+ delete_btn +`
+                      `+ validity_btn +`
                     </div>
                   </div>
                 </div>
@@ -336,8 +339,7 @@ App = {
                     </ul>
                     <div class="card-body">
                       <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
-                      <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`')">Invalidate</button>
-                      <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`')">Set valid</button>
+                      ` + validity_btn + `
                     </div>
                   </div>
                 </div>
@@ -740,7 +742,8 @@ App = {
       let members = await eagleContractInstance.getTeamMembers({from: App.account});
       console.log(members);
       let role = await eagleContractInstance.getMyRole({from: App.account});
-      if(role!='tl' && role!='unknown'){
+      
+      if(App.role == 'std'){
         mainContent.innerHTML = `
         <img src="images/permissionDenied.png" style="width=200px;"/>
         <div class="alert alert-danger" style="width:30%;">
@@ -754,24 +757,26 @@ App = {
           <div class='form-row'>
             <div class='form-group col-md-6'>
               <label for="memberAddress">Add team member</label><br>
-              <input type="text" class='form-control' id="memberAddress" name="memberAddress"><br>
+              <input type="text" class='form-control add-form' id="memberAddress" name="memberAddress" required><br>
               <div class='row'> 
                 <div class='col'>
                   <label for="memberName">Add team member name</label><br>
-                  <input type="text" class='form-control' id="memberName" name="memberName"><br>
+                  <input type="text" class='form-control add-form' id="memberName" name="memberName" required><br>
                 </div>
                 <div class='col'>
                   <label for="memberSurname">Add team member surname</label><br>
-                  <input type="text" class='form-control' id="memberSurname" name="memberSurname"><br>
+                  <input type="text" class='form-control add-form' id="memberSurname" name="memberSurname" required><br>
                 </div>
               </div>
               <label for="memberRole">What is its role?</label><br>
-              <select id="memberRole" class='form-control'>
+              <select id="memberRole" class='form-control add-form' required>
                 <option value="1">Team leader</option>
-                <option value="2">Standard</option>
+                <option value="2">Leader</option>
+                <option value="3">Secretary</option>
+                <option value="4">Standard</option>
               </select><br>
               <label for="memberArea">What is its area?</label><br>
-              <select id="memberArea" class='form-control'></select><br>
+              <select id="memberArea" class='form-control add-form' required></select><br>
               <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
             </div>
           </div>
@@ -793,6 +798,18 @@ App = {
                   
         })
 
+        // check if does not have an area
+        if(App.areaid == -1){
+          let result = await App.setAreaId();  // check if the user is in the team
+          if(result==-1){
+            console.log("you are not part of the team");
+            App.displayNotInTeam();
+            return;
+          }
+        }
+
+        console.log(App.areaid)
+
         fetch('../api/v1/users')
           .then((res) => res.json())
           .then(async users => {
@@ -800,13 +817,16 @@ App = {
               let user_name = users[teamMember]["name"];
               let user_surname = users[teamMember]["surname"];
               let user_id = users[teamMember]["blockchain_id"];
+              let user_area = users[teamMember]["area"]
 
               role = await eagleContractInstance.getMemberRole(members[teamMember], {from: App.account});
-              if(role === "tl"){
-                document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>Show certificates</button></div><br>`;
-              } else {
-                document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">account_circle</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>Show certificates</button></div><br>`;
-              }
+              if(App.checkPermission(user_area) && user_id != App.blockchainid) {
+                if(role === "tl"){
+                  document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">supervisor_account</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>Show certificates</button></div><br>`;
+                } else {
+                  document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'><span class="material-symbols-outlined">account_circle</span>  <span id='address'>`+members[teamMember]+`</span>\xa0\xa0<span>`+user_name+`</span>  <span>`+user_surname+`</span>\xa0\xa0<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>Show certificates</button></div><br>`;
+                }
+              }              
             }            
           })        
 
@@ -825,8 +845,7 @@ App = {
       <div class="jumbotron">
         <h2 class="display-4">Courses</h2>
         <p class="lead">Here is the list of the courses which are available in your organization.</p>
-        <p class="lead">
-          <button type="button" class="btn btn-dark id="addCourseBtn" onclick="App.displayAddNewCourse()">Add course</button>
+        <p class="lead" id="add-course">
         </p>
         <hr class="my-4">
       </div>
@@ -842,6 +861,11 @@ App = {
         </div>
       </div>
       `;
+
+      //Only team leader and secretary can add a course
+      if(App.checkPermission()) {
+        $('#add-course').html(`<button type="button" class="btn btn-dark id="addCourseBtn" onclick="App.displayAddNewCourse()">Add course</button>`);
+      }
 
       if(App.blockchainid==-1){
         let result = await App.setBlockchainId();  // check if the user is in the team
@@ -964,48 +988,61 @@ App = {
 
   // Add a new team member wallet address
   addTeamMember: function(){
-    App.showSpinner();
 
-    // retrive form data
-    let userWalletAddress = $("#memberAddress").val();
-    let user_name = $("#memberName").val();
-    let user_surname = $("#memberSurname").val();
-    let userRole = $("#memberRole").val();
-    let userArea = $("#memberArea").val();
+    // Check if all required inputs field have been compiled
+    var valid = true;
+     var inputs = document.getElementsByClassName("add-form");
+ 
+    for (let i = inputs.length-1; i >= 0; i--) { //descending for to make validation start from the first input
+      if (!inputs[i].reportValidity()) {
+        valid = false;        
+      }      
+    }
+     
+    if(valid) {     
+      App.showSpinner();
 
-    App.contracts.Eagle.deployed().then(async function(instance){
-      try {
-        // register user un the blockchain        
-        let result = await instance.addTeamMember(userWalletAddress, userRole, userArea, {from: App.account});
-        console.log("result: "+result);
+      // retrive form data
+      let userWalletAddress = $("#memberAddress").val();
+      let user_name = $("#memberName").val();
+      let user_surname = $("#memberSurname").val();
+      let userRole = $("#memberRole").val();
+      let userArea = $("#memberArea").val();
 
-        // get the blockchain id of the just inserted user and update the database
-        let blockchain_id = await instance.getUserId(userWalletAddress, {from: App.account});
+      App.contracts.Eagle.deployed().then(async function(instance){
+        try {
+          // register user un the blockchain        
+          let result = await instance.addTeamMember(userWalletAddress, userRole, userArea, {from: App.account});
+          console.log("result: "+result);
 
-        fetch('../api/v1/users', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({memberId: blockchain_id, memberName: user_name, memberSurname: user_surname, memberArea: userArea})
-        })
-        .then(function(data){
-          console.log(data.status);
-          if(data.status == 201) {
-            App.displayTeam();
-          } else if(data.status == 409) {
-            document.getElementById("errorMsg").innerHTML = "Something went wrong. User already inserted";
-          } else {
-            document.getElementById("errorMsg").innerHTML = "Something went wrong. Missing required information";
-          }
-        })
-      }catch(err){
+          // get the blockchain id of the just inserted user and update the database
+          let blockchain_id = await instance.getUserId(userWalletAddress, {from: App.account});
+
+          fetch('../api/v1/users', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({memberId: blockchain_id, memberName: user_name, memberSurname: user_surname, memberArea: userArea})
+          })
+          .then(function(data){
+            console.log(data.status);
+            if(data.status == 201) {
+              App.displayTeam();
+            } else if(data.status == 409) {
+              document.getElementById("errorMsg").innerHTML = "Something went wrong. User already inserted";
+            } else {
+              document.getElementById("errorMsg").innerHTML = "Something went wrong. Missing required information";
+            }
+          })
+        }catch(err){
+          console.log("error:")
+          console.log(err);
+        }
+      }).catch(function(err){
         console.log("error:")
-        console.log(err);
-      }
-    }).catch(function(err){
-      console.log("error:")
-      console.log(err.message);
-    });
-    App.hideSpinner();
+        console.log(err.message);
+      });
+      App.hideSpinner();
+    }
   },
 
   // Delete NFT
@@ -1138,7 +1175,7 @@ getCourses: function(userId){
       var buttons = "";
       
       // Display edit and delete button to certain roles
-      if(App.role != "std") {
+      if(App.checkPermission()) {
         buttons = 
           ` <button class="btn btn-danger" onclick="App.deleteCourse('`+self_id+`')">Delete</button>
             <button class="btn btn-warning" onclick="App.displayEditCourse('`+self_id+`')">Edit</button>
@@ -1596,6 +1633,22 @@ setBlockchainId: async function (){
   return result;
 },
 
+setAreaId: async function() {
+  let result = await App.contracts.Eagle.deployed().then(async function(instance){
+    try {
+      let result = await instance.getMyAreaId({from: App.account});
+      App.areaid = result.toNumber();
+    }catch(err){
+      return -1;
+    }
+  }).catch(function(err){
+    console.log("error:")
+    console.log(err.message);
+  });
+
+  return result;
+},
+
 // disconnect Metamask wallet
 disconnectMetamask: async function(){
   App.showSpinner();
@@ -1636,6 +1689,13 @@ initFirstUser: function(){
     </div>
     `;
   });
+}, 
+
+checkPermission(areaid, ct = false) {
+  if(App.role == "tl" || App.role == "sec" || App.role == 'unknown') return true;
+  if(App.role == "ct" && areaid == App.areaid || App.role == "ct" && ct) return true;
+
+  return false;
 }
 /**===========*/
 };
