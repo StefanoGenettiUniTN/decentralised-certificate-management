@@ -336,8 +336,8 @@ App = {
                     </ul>
                     <div class="card-body">
                       <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
-                      <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`')">Invalidate</button>
-                      <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`')">Set valid</button>
+                      <button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`', '`+blockchain_id+`')">Invalidate</button>
+                      <button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`', '`+blockchain_id+`')">Set valid</button>
                     </div>
                   </div>
                 </div>
@@ -754,24 +754,24 @@ App = {
           <div class='form-row'>
             <div class='form-group col-md-6'>
               <label for="memberAddress">Add team member</label><br>
-              <input type="text" class='form-control' id="memberAddress" name="memberAddress"><br>
+              <input type="text" class='form-control' id="memberAddress" name="memberAddress" required><br>
               <div class='row'> 
                 <div class='col'>
                   <label for="memberName">Add team member name</label><br>
-                  <input type="text" class='form-control' id="memberName" name="memberName"><br>
+                  <input type="text" class='form-control' id="memberName" name="memberName" required><br>
                 </div>
                 <div class='col'>
                   <label for="memberSurname">Add team member surname</label><br>
-                  <input type="text" class='form-control' id="memberSurname" name="memberSurname"><br>
+                  <input type="text" class='form-control' id="memberSurname" name="memberSurname" required><br>
                 </div>
               </div>
               <label for="memberRole">What is its role?</label><br>
-              <select id="memberRole" class='form-control'>
+              <select id="memberRole" class='form-control' required>
                 <option value="1">Team leader</option>
                 <option value="2">Standard</option>
               </select><br>
               <label for="memberArea">What is its area?</label><br>
-              <select id="memberArea" class='form-control'></select><br>
+              <select id="memberArea" class='form-control' required></select><br>
               <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
             </div>
           </div>
@@ -973,39 +973,51 @@ App = {
     let userRole = $("#memberRole").val();
     let userArea = $("#memberArea").val();
 
-    App.contracts.Eagle.deployed().then(async function(instance){
-      try {
-        // register user un the blockchain        
-        let result = await instance.addTeamMember(userWalletAddress, userRole, userArea, {from: App.account});
-        console.log("result: "+result);
-
-        // get the blockchain id of the just inserted user and update the database
-        let blockchain_id = await instance.getUserId(userWalletAddress, {from: App.account});
-
-        fetch('../api/v1/users', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({memberId: blockchain_id, memberName: user_name, memberSurname: user_surname, memberArea: userArea})
-        })
-        .then(function(data){
-          console.log(data.status);
-          if(data.status == 201) {
-            App.displayTeam();
-          } else if(data.status == 409) {
-            document.getElementById("errorMsg").innerHTML = "Something went wrong. User already inserted";
-          } else {
-            document.getElementById("errorMsg").innerHTML = "Something went wrong. Missing required information";
-          }
-        })
-      }catch(err){
+    if(userWalletAddress == "" || user_name == "" || user_surname == "" || userRole == 0 || userArea == 0){
+      var output_html = document.getElementById("errorMsg");
+      output_html.innerHTML = `
+      <div class="alert alert-danger" role="alert">
+        Missing parameters
+      </div>
+      `;
+      App.hideSpinner();
+    } else {
+      App.contracts.Eagle.deployed().then(async function(instance){
+        try {
+          // register user un the blockchain        
+          let result = await instance.addTeamMember(userWalletAddress, userRole, userArea, {from: App.account});
+          console.log("result: "+result);
+  
+          // get the blockchain id of the just inserted user and update the database
+          let blockchain_id = await instance.getUserId(userWalletAddress, {from: App.account});
+  
+          fetch('../api/v1/users', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({memberId: blockchain_id, memberName: user_name, memberSurname: user_surname, memberArea: userArea})
+          })
+          .then(function(data){
+            console.log(data.status);
+            if(data.status == 201) {
+              App.displayTeam();
+            } else if(data.status == 409) {
+              document.getElementById("errorMsg").innerHTML = "Something went wrong. User already inserted";
+            } else {
+              document.getElementById("errorMsg").innerHTML = "Something went wrong. Missing required information";
+            }
+          })
+        }catch(err){
+          console.log("error:")
+          console.log(err);
+        }
+      }).catch(function(err){
         console.log("error:")
-        console.log(err);
-      }
-    }).catch(function(err){
-      console.log("error:")
-      console.log(err.message);
-    });
-    App.hideSpinner();
+        console.log(err.message);
+      });
+      App.hideSpinner();
+    }
+
+    
   },
 
   // Delete NFT
@@ -1032,7 +1044,7 @@ App = {
   },
 
   // Invalidate NFT
-  invalidateNFT: function(tokenId){
+  invalidateNFT: function(tokenId, user_address, blockchain_id){
     App.showSpinner();
     console.log("test: "+tokenId);
     App.contracts.Eagle.deployed().then(async function(instance){
@@ -1042,7 +1054,7 @@ App = {
         if(confirm("Are you sure to set the certificate not valid?")){        
           let result = await EagleInstance.setCertificateNotValid(tokenId, {from: App.account});
         }
-        App.displayCertificates();
+        App.displayCertificates(user_address, blockchain_id);
       }catch(err){
         console.log("error:")
         console.log(err);
@@ -1056,7 +1068,7 @@ App = {
   },
 
   // Set the NFT as valid
-  validateNFT: function(tokenId){
+  validateNFT: function(tokenId, user_address, blockchain_id){
     App.showSpinner();
     console.log("validate "+tokenId);
 
@@ -1067,7 +1079,7 @@ App = {
         if(confirm("Are you sure to set the certificate valid?")){        
           let result = await EagleInstance.setCertificateValid(tokenId, {from: App.account});
         }
-        App.displayCertificates();
+        App.displayCertificates(user_address, blockchain_id);
       }catch(err){
         console.log("error:")
         console.log(err);
@@ -1535,16 +1547,19 @@ displayFirstInteractionForm: function(){
   var output_html = document.getElementById("firstInteractionForm");
   output_html.innerHTML = `
   <p class="lead">This is the first interaction with the distributed application. If you are reading this message, the smart contracts, the hearth of the backend of our distributed service, have been deployed but no user has been added to the blockchain yet. In order to use the service, the system has to be initialized. Please register yourself. After the registration process, please reload the current webpage.</p>
-  <form>
-    <div class="form-group">
-      <label for="firstTeamLeaderName">Name</label>
-      <input type="text" class="form-control" id="firstTeamLeaderName" placeholder="Enter your first name">
-    </div>
-    <div class="form-group">
-      <label for="firstTeamLeaderSurname">Surname</label>
-      <input type="text" class="form-control" id="firstTeamLeaderSurname" placeholder="Enter your second name">
-    </div>
-    <button type="button" class="btn btn-primary mb-4" onclick="App.initFirstUser()" id="btn-add-course">Initialize DApp</button>
+  <form class='col-md-6'>
+    <div class='row'> 
+      <div class="col form-group">
+        <label for="firstTeamLeaderName">Name</label>
+        <input type="text" class="form-control" id="firstTeamLeaderName" placeholder="Enter your first name" required>
+      </div>
+      <div class="col form-group">
+        <label for="firstTeamLeaderSurname">Surname</label>
+        <input type="text" class="form-control" id="firstTeamLeaderSurname" placeholder="Enter your second name" required>
+      </div>
+    </div><br>
+    <input type="hidden" id="firstTeamLeaderAddress" value="`+App.account+`" />
+    <button type="button" class="btn btn-primary mb-4" onclick="App.initFirstUser()" id="btn-add-course">Subscribe first user</button>
   </form>
   <div id="initSuccess"></div>  
   `;
@@ -1610,32 +1625,64 @@ disconnectMetamask: async function(){
 },
 
 initFirstUser: function(){
-  
-  // TODO: add a method in the model to add the user in the database
+  App.showSpinner();
+  let userWalletAddress = $("#firstTeamLeaderAddress").val();
+  let user_name = $("#firstTeamLeaderName").val();
+  let user_surname = $("#firstTeamLeaderSurname").val();
 
-  App.contracts.Eagle.deployed().then((instance) =>{
-    return instance.addFirstTeamLeader({from: App.account});
-  }).then(function(){
-    // TODO: spostare questo display in view?
-    var output_html = document.getElementById("initSuccess");
-    output_html.innerHTML = `
-    <div class="alert alert-success" role="alert">
-      Excellent! Please refresh the page to start using our service.
-    </div>
-    `;
-    console.log("success");
-  }).catch(function(err){
-    console.log("error:")
-    console.log(err.message);
-
-    // TODO: spostare questo display in view?
+  if(user_name == "" || user_surname == ""){
     var output_html = document.getElementById("initSuccess");
     output_html.innerHTML = `
     <div class="alert alert-danger" role="alert">
-      Something went wrong )-:
+      Missing parameters
     </div>
     `;
-  });
+    App.hideSpinner();
+  } else {
+    // TODO: add a method in the model to add the user in the database
+
+    App.contracts.Eagle.deployed().then(async (instance) =>{
+      let result = await instance.addFirstTeamLeader({from: App.account});
+      let blockchain_id = await instance.getMyUserId({from: App.account});
+
+      fetch('../api/v1/users', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({memberId: blockchain_id, memberName: user_name, memberSurname: user_surname, memberArea: 1})
+      })
+      .then(function(data){
+        if(data.status == 409) {
+          document.getElementById("errorMsg").innerHTML = "Something went wrong. User already inserted";
+        } else if (data.status == 400) {
+          document.getElementById("errorMsg").innerHTML = "Something went wrong. Missing required information";
+        }
+        return result;
+      })
+    }).then(function(){
+
+      // TODO: spostare questo display in view?
+      var output_html = document.getElementById("initSuccess");
+      output_html.innerHTML = `
+      <div class="alert alert-success" role="alert">
+        Excellent! Please refresh the page to start using our service. <button class='btn btn-primary' onclick='window.location.reload();'>Refresh the page</button>
+      </div>
+      `;
+      console.log("success");
+      App.hideSpinner();
+    }).catch(function(err){
+      console.log("error:")
+      console.log(err.message);
+
+      // TODO: spostare questo display in view?
+      var output_html = document.getElementById("initSuccess");
+      output_html.innerHTML = `
+      <div class="alert alert-danger" role="alert">
+        Something went wrong )-:
+      </div>
+      `;
+      App.hideSpinner();
+    });
+  }
 }
 /**===========*/
 };
