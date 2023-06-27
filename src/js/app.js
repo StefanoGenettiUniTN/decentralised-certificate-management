@@ -1453,14 +1453,14 @@ displayUploadCertificateForm: async function(owner=undefined, from=undefined){
       <span id="upload-certificate-form-goback"></span>
       <hr class="my-4">
     </div>
-    <div class="col-sm-6">
+    <div class="col-sm-7">
       <div class="input-group mb-3">
         <span class="input-group-text">Title</span>
-        <input type="text" class="upload-form form-control" id="certificate-name" placeholder="...insert title" required>
+        <input type="text" class="upload-form form-control" id="certificate-name" placeholder="... insert certificate title" required>
       </div>
       <div class="input-group mb-3">
         <span class="input-group-text">Description</span>
-        <textarea class="upload-form form-control" id="certificate-description" required></textarea>
+        <textarea class="upload-form form-control" id="certificate-description" placeholder="... insert certificate description" required></textarea>
       </div>
       <div class="input-group mb-3">
         <input class="upload-form form-control" type="file" id="file-input" accept="application/pdf" required>
@@ -1468,12 +1468,12 @@ displayUploadCertificateForm: async function(owner=undefined, from=undefined){
       <div class="input-group mb-3">
         <label class="input-group-text">Category</label>
         <select class="upload-form form-select" id="certificate-category" required>
-          <option value="DFLT">DFLT</option>
-          <option value="FRMZ">FRMZ</option>
-          <option value="SECU">SECU</option>
-          <option value="WELL">WELL</option>
-          <option value="CURR">CURR</option>
-          <option value="LANG">LANG</option>
+          <option value="DFLT">Default Certificate</option>
+          <option value="FRMZ">Formation Certificate</option>
+          <option value="SECU">Security Certificate</option>
+          <option value="WELL">Good Behaviour Certificate</option>
+          <option value="CURR">Profit Certificate</option>
+          <option value="LANG">Foreing Language Certificate</option>
         </select>
       </div>
       <div class="input-group mb-3">
@@ -1495,7 +1495,7 @@ displayUploadCertificateForm: async function(owner=undefined, from=undefined){
       </span>
       <div class="input-group mb-3">
         <span class="input-group-text">Issuing authority</span>
-        <input type="text" class="upload-form form-control" id="certificate-authority" required>
+        <input type="text" class="upload-form form-control" id="certificate-authority" placeholder="... insert the authority who released the certificate" required>
       </div>
       <div class="input-group mb-3">
         <span class="input-group-text">Owner address</span>
