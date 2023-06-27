@@ -170,6 +170,13 @@ contract Eagle {
         return userIdToUserAddress[userId];
     } 
 
+    // Get user id of the sender
+    function getMyAreaId() public view returns (uint256){
+        require(userAddressToUserId[msg.sender]!=0, "you are not a team member");    // the user must be already added in the team
+        return userAddressToArea[msg.sender];
+    } 
+
+
     // Set the certificate of a team member not
     // valid
     function setCertificateNotValid(uint256 tokenId) public{
