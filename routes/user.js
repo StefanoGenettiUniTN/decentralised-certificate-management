@@ -11,7 +11,8 @@ router.get('/users', async (req, res) => {
             name: user.name,
             surname: user.surname,
             blockchain_id: user.blockchain_id,
-            courses: user.courses
+            courses: user.courses, 
+            area: user.area
         };
     });
     res.status(200).json(response);
