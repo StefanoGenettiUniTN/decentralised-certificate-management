@@ -42,6 +42,7 @@ Consists only of an **express** server which is used to interact with Pinata and
 The purpose of this branch is to facilitate collaboration among the team members throughout the development process. For our solution's latest official and stable release, please refer to the `main` branch.
 From this branch, other branches are created to experiment with specific functionalities.
 
+#### Main folders
 ```
     .
     ├── contracts                   # Smart contracts files 
@@ -49,7 +50,8 @@ From this branch, other branches are created to experiment with specific functio
     ├── models                      # MongoDB models
     ├── routes                      # ExpressJs routes
     ├── src                         # Source files 
-    └── test                        # Smart contract tests
+    ├── test                        # Smart contract tests
+    └── ...
 ```
 #### Src folder main files
 ```
