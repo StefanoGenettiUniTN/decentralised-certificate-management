@@ -598,8 +598,17 @@ App = {
         html_notification += `<div class="overflow-auto" style="height: 500px; width: 55rem;">`;
         for(i in expiredCertificates){
           cert_obj = expiredCertificates[i];
+
+          // Show expiration date only if different from undefined
+          html_expiration_date = "";
+          console.log(typeof cert_obj.date_expiration)
+          if(cert_obj.date_expiration != "undefined") {
+            console.log("cio")
+            html_expiration_date = `<li class="list-group-item"><b>expiration date: </b>`+cert_obj.date_expiration+`</li>`
+          }
+
           html_notification += `
-                <div class="card mb-2" style="width: 50rem;">
+                <div class="card border-danger mb-3 mb-2" style="width: 50rem;">
                   <img src="images/defaultCertificateIcon.png" class="card-img-top" style="width: 33%">
                   <div class="card-body">
                   <h5 class="card-title">`+cert_obj.name+`</h5>
@@ -607,7 +616,7 @@ App = {
                   </div>
                   <ul class="list-group list-group-flush">
                     <li class="list-group-item"><b>achievement date: </b>`+cert_obj.date_achievement+`</li>
-                    <li class="list-group-item"><b>expiration date: </b>`+cert_obj.date_expiration+`</li>
+                    `+html_expiration_date+`
                     <li class="list-group-item"><b>issuing authority: </b>`+cert_obj.issuing_authority+`</li>
                     <li class="list-group-item"><b>category: </b>`+cert_obj.category+`</li>
                   </ul>
@@ -646,6 +655,14 @@ App = {
               cert_obj.issuing_authority = result.issuing_authority;          
             }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
           }
+
+          // Show expiration date only if different from undefined
+          html_expiration_date = "";
+          if(cert_obj.date_expiration != "undefined") {
+            html_expiration_date = `<li class="list-group-item"><b>expiration date: </b>`+cert_obj.date_expiration+`</li>`
+          }
+            
+
           html_lastCertificates += `
                 <div class="card mb-2" style="width: 50rem;">
                   <img src="images/defaultCertificateIcon.png" class="card-img-top" style="width: 33%">
@@ -655,7 +672,7 @@ App = {
                   </div>
                   <ul class="list-group list-group-flush">
                     <li class="list-group-item"><b>achievement date: </b>`+cert_obj.date_achievement+`</li>
-                    <li class="list-group-item"><b>expiration date: </b>`+cert_obj.date_expiration+`</li>
+                    `+html_expiration_date+`
                     <li class="list-group-item"><b>issuing authority: </b>`+cert_obj.issuing_authority+`</li>
                     <li class="list-group-item"><b>category: </b>`+cert_obj.category+`</li>
                   </ul>
