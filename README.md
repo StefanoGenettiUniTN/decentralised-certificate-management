@@ -14,10 +14,10 @@ This Dapp was built as a study project for the **Blockchain course** by:
 - Pietro Fronza
 - Stefano Genetti
   
-This project aims to create a Dapp that can improve the workflow in organizing the certificate of the members of a group, such as a team or a company.
-To address the problem we used a hybrid system, that utilizes some distributed services and a web service.
+The objective of this project is to develop a **Dapp** that enhances the process of managing certificates for individuals belonging to a group, such as a team or a company. 
+To address this challenge, our approach involves implementing a system that combines distributed services, including a **private blockchain** and **IPFS** (InterPlanetary File System), along with a web service developed using **Express**. The latter enables us to interact with external products and enhance the overall certificate management process.
 
-**Note:** This repository contains an example of a solution developed exclusively for the E-agle team of the University of Trento.
+**Note:** This repository contains the **minimum viable product** developed exclusively for the E-agle team of the University of Trento.
 
 #### Distributed part
 This part consists in:
@@ -157,7 +157,7 @@ Now we need to connect MetaMask to the blockchain created by Ganache.
 <p />
 
 4. Fill the fields with these values:
-  - **Name:** it can be anything you like
+  - **Name:** It can be anything you like
   - **New RPC URL:** HTTP://127.0.0.1:7545
   - **Chain ID:** 1337
   - **Currency symbol:** ETH
@@ -166,13 +166,28 @@ Now we need to connect MetaMask to the blockchain created by Ganache.
 #### Starting the web service
 All the following commands must be executed in the root folder of the repository
 
-2. Copy **.env.local.example** to **.env** and fill it with environment variables
+1. Copy **.env.local.example** to **.env** and fill it with environment variables
+2. Install all the dependencies
+       
+    ```
+    npm install
+    ```
 3. Start the express server
 
     ```
-   npm run start_local
-   ```
-5. The frontend app is now available at 127.0.0.1:8080
+    npm run start_local
+    ```
+4. The frontend app is now available at 127.0.0.1:8080
 
 #### Use the Dapp
-1. Connect with metamask
+1. Connect with Metamask
+
+
+The Dapp is divided into 5 main sections:
+ - **Profile:** Shows all the information about the user.
+ - **My Certificates:** Displays all the certificates owned by the user, along with their respective details.
+ - **Upload a certificate:** Contains a form that enables users to upload a certificate.
+ - **Team:** This section is restricted to leaders and the secretary, granting them the ability to add a member to the team and assign them to a specific area.
+ - **Courses:** Shows a comprehensive list of courses available for team members to enroll in
+   
+
