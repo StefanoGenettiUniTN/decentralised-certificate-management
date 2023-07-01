@@ -785,36 +785,59 @@ App = {
         `;
       } else {
         mainContent.innerHTML = `
-          <div class='form-row'>
-            <div class='form-group col-md-6'>
-              <label for="memberAddress">Add team member</label><br>
-              <input type="text" class='form-control add-form' id="memberAddress" name="memberAddress" required><br>
-              <div class='row'> 
-                <div class='col'>
-                  <label for="memberName">Add team member name</label><br>
-                  <input type="text" class='form-control add-form' id="memberName" name="memberName" required><br>
-                </div>
-                <div class='col'>
-                  <label for="memberSurname">Add team member surname</label><br>
-                  <input type="text" class='form-control add-form' id="memberSurname" name="memberSurname" required><br>
-                </div>
+        <h6 class="display-6">Add a team member</h6>
+        <hr class="my-4">
+
+        <div class="col-sm-6">
+
+          <!-- Wallet address --!>
+          <div class="input-group mb-3">
+            <span class="input-group-text">Wallet address</span>
+            <input type="text" class='form-control add-form' id="memberAddress" name="memberAddress" required>
+          </div>
+
+          <!-- Name and surname --!>
+          <div class='row'> 
+            <div class='col'>
+              <div class="input-group mb-3">
+                <span class="input-group-text">Name</span>
+                <input type="text" class='form-control add-form' id="memberName" name="memberName" required>
               </div>
-              <label for="memberRole">What is its role?</label><br>
-              <select id="memberRole" class='form-control add-form' required>
-                <option value="1">Team leader</option>
-                <option value="2">Leader</option>
-                <option value="3">Secretary</option>
-                <option value="4">Standard</option>
-              </select><br>
-              <label for="memberArea">What is its area?</label><br>
-              <select id="memberArea" class='form-control add-form' required></select><br>
-              <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
+            </div>
+            <div class='col'>
+              <div class="input-group mb-3">
+                <span class="input-group-text">Surname</span>
+                <input type="text" class='form-control add-form' id="memberSurname" name="memberSurname" required>
+              </div>
             </div>
           </div>
-          <hr>
-          <div class='form-row'>
-            <div id="teamList" class='list-group list-group-flush'></div>
+
+          <!-- Role select--!>
+          <div class="input-group mb-3">
+            <span class="input-group-text">What is its role?</span>
+            <select id="memberRole" class='form-control add-form' required>
+              <option value="1">Team leader</option>
+              <option value="2">Leader</option>
+              <option value="3">Secretary</option>
+              <option value="4">Standard</option>
+            </select>
           </div>
+
+          <!-- Area select--!>
+          <div class="input-group mb-3">
+            <span class="input-group-text">What is its role?</span>
+            <select id="memberArea" class='form-control add-form' required></select><br>
+          </div>
+
+          <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
+        
+
+        <hr>
+        <h6 class="display-6 mt-5">Current members</h6>
+        <hr>
+        <div class='form-row'>          
+          <div id="teamList" class='list-group list-group-flush'></div>
+        </div>
         `;
           
         // Save areas to display them for each member
@@ -854,7 +877,7 @@ App = {
               let user_area = users[teamMember]["area"]
 
               role = await eagleContractInstance.getMemberRole(members[teamMember], {from: App.account});
-              if(App.checkPermission(user_area) && user_id != App.blockchainid) {
+              if(App.checkPermission(user_area)) {
 
                 var icon = "";
                 
@@ -872,19 +895,25 @@ App = {
                     icon = '<span class="material-symbols-outlined">account_circle</span>'; 
                     break;
                 }
+
+                var memberDiv = `<div class='list-group-item list-group-item-action py-3' id="`+members[teamMember]+`"> ` 
+                                  + icon + 
+                                  ` <span id='address'>`+members[teamMember]+`</span>
+                                    \xa0\xa0<span> | </span> \xa0\xa0   
+                                    <span>`+areas[user_area-1]["name"]+`</span>                                                                   
+                                    \xa0\xa0<span> | </span> \xa0\xa0   
+                                
+                                    `;
+                
+                if(user_id != App.blockchainid) {
+                  memberDiv += `<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>
+                                    Show certificates
+                                  </button>
+                                </div>`
+                }
                
-                document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'> ` 
-                                                                  + icon + 
-                                                                  ` <span id='address'>`+members[teamMember]+`</span>
-                                                                    \xa0\xa0<span> | </span> \xa0\xa0   
-                                                                    <span>`+areas[user_area-1]["name"]+`</span>                                                                   
-                                                                    \xa0\xa0<span> | </span> \xa0\xa0   
-                                                                    <span>`+user_name+`</span>  
-                                                                    <span>`+user_surname+`</span>\xa0\xa0
-                                                                    <button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>
-                                                                      Show certificates
-                                                                    </button>
-                                                                  </div><br>`;                      
+                document.getElementById("teamList").innerHTML += memberDiv
+                                                                  
               }              
             }            
           })        
@@ -1551,7 +1580,7 @@ displayUploadCertificateForm: async function(owner=undefined, from=undefined){
   if(App.account){
     mainContent.innerHTML = `
     <div class="jumbotron">
-      <h2 class="display-4">Upload certificate</h2>
+      <h6 class="display-6">Upload certificate</h6>
       <span id="upload-certificate-form-goback"></span>
       <hr class="my-4">
     </div>
