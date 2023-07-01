@@ -234,13 +234,12 @@ App = {
           data_user = await App.getUserInfo(blockchain_id);
         }
         mainContent.innerHTML = (user_address==undefined) ? `
-          <br>
-          <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
+          <div id="certificateList" class='row row-cols-1 row-cols-md-4'></div>
         ` : `
           <h2 class="display-4">Certificates</h2>
           <p class="lead">Certificates of user <strong>${data_user["name"]} ${data_user["surname"]}</strong></p>
           <button id='back' class='btn btn-link' onclick="App.displayTeam();">Go back to team member list</button>
-          <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
+          <div id="certificateList" class='row row-cols-1 row-cols-md-4'></div>
         ` 
         
         let token_id;
@@ -310,11 +309,12 @@ App = {
                
             if(user_address==undefined){ 
               $("#certificateList").append(`
-                <div class="col-mb-4">
-                  <div class="card mt-3" style="width: 30rem; height: 50rem; overflow-y: auto;">
-                    <img src=`+image_link+` class="card-img-top">
+                <div class="col-mb-3 p-3">
+                  <div class="card mt-3" style="height: 45rem; overflow-y: auto;">
+                    <img src=`+image_link+` class="card-img-top mx-auto mt-3" style="width: 60%;">
                     <div class="card-body">
-                    <h5 class="card-title">`+name+`</h5>
+                    <h5 class="card-title display-5">`+name+`</h5>
+                    <hr>
                     <p class="card-text">`+description+`</p>
                     </div>
                     <ul class="list-group list-group-flush">
@@ -324,7 +324,7 @@ App = {
                       <li class="list-group-item"><b>category: </b>`+category+`</li>
                       `+validity_html+`
                     </ul>
-                    <div class="card-body" id="cert-card-` + token_id + `">
+                    <div class="card-footer" id="cert-card-` + token_id + `">
                       <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
                       `+ delete_btn + `
                     </div>
@@ -333,9 +333,9 @@ App = {
                 `);
             } else {
               $("#certificateList").append(`
-                <div class="col-mb-4">
-                  <div class="card mt-3" style="width: 30rem; height: 50rem; overflow-y: auto;">
-                    <img src=`+image_link+` class="card-img-top">
+                <div class="col-mb-3 p-3">
+                  <div class="card mt-3" style="height: 45rem; overflow-y: auto;">
+                    <img src=`+image_link+` class="card-img-top mx-auto mt-3" style="width: 60%;">
                     <div class="card-body">
                     <h5 class="card-title">`+name+`</h5>
                     <p class="card-text">`+description+`</p>
@@ -347,7 +347,7 @@ App = {
                       <li class="list-group-item"><b>category: </b>`+category+`</li>
                       `+validity_html+`
                     </ul>
-                    <div class="card-body" id="cert-card-` + token_id + `">
+                    <div class="card-footer" id="cert-card-` + token_id + `">
                       <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
                     </div>
                   </div>
@@ -692,7 +692,7 @@ App = {
 
       // display profile card
       mainContent.innerHTML = `
-      <div class="container-fluid p-3">
+      <div class="container-fluid">
         <div class="row mb-3">          
               <h5 class="display-5">Welcome back, <strong>`+account_name+`</strong></h5>
               <p class="card-text">
