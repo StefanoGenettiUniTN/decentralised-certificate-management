@@ -595,7 +595,7 @@ App = {
         html_notification += `<p>Hurray! All your certificates are valid.</p>`;
       }else{
         html_notification += `<p>The following certificates owned by you are expired or not valid:</p>`;
-        html_notification += `<div class="overflow-auto" style="height: 500px; width: 55rem;">`;
+        html_notification += `<div class="overflow-auto p-5" style="height: 500px; border: 2px solid #f8f9fa!important;/* border-style: outset;">`;
         for(i in expiredCertificates){
           cert_obj = expiredCertificates[i];
 
@@ -608,8 +608,8 @@ App = {
           }
 
           html_notification += `
-                <div class="card border-danger mb-3 mb-2" style="width: 50rem;">
-                  <img src="images/defaultCertificateIcon.png" class="card-img-top" style="width: 33%">
+                <div class="card border-danger mx-auto mb-5">
+                  <img src="images/defaultCertificateIcon.png" class="card-img-top mx-auto p-2" style="width: 40%">
                   <div class="card-body">
                   <h5 class="card-title">`+cert_obj.name+`</h5>
                   <p class="card-text">`+cert_obj.description+`</p>
@@ -636,7 +636,7 @@ App = {
         html_lastCertificates += `<p>You have not uploaded any certificate yet.</p>`;
       }else{
         html_lastCertificates += `<p>The following are the last certificates you have uploaded:</p>`;
-        html_lastCertificates += `<div class="overflow-auto" style="height: 500px; width: 55rem;">`;
+        html_lastCertificates += `<div class="overflow-auto p-5" style="height: 500px; border: 2px solid #f8f9fa!important;/* border-style: outset;">`;
 
         mostRecentCertificates.sort(function(a, b) {  // sort certificates by date of achievement
           return b.date_creation - a.date_creation;
@@ -664,8 +664,8 @@ App = {
             
 
           html_lastCertificates += `
-                <div class="card mb-2" style="width: 50rem;">
-                  <img src="images/defaultCertificateIcon.png" class="card-img-top" style="width: 33%">
+                <div class="card mx-auto mb-5">
+                  <img src="images/defaultCertificateIcon.png" class="card-img-top mx-auto p-2" style="width: 40%">
                   <div class="card-body">
                   <h5 class="card-title">`+cert_obj.name+`</h5>
                   <p class="card-text">`+cert_obj.description+`</p>
@@ -692,65 +692,59 @@ App = {
 
       // display profile card
       mainContent.innerHTML = `
-      <div class="container-fluid">
-        <div class="row">
-          <p>---<b> profile section </b>------------------------------------------------------------------------------</p>
-        </div>
-        <div class="row">
-          <div class="card" style="width: 50rem;">
-            <div class="card-body">
-              <h5 class="card-title">Welcome back!</h5>
+      <div class="container-fluid p-3">
+        <div class="row mb-3">          
+              <h5 class="display-5">Welcome back, <strong>`+account_name+`</strong></h5>
               <p class="card-text">
-                We're glad to see you back on our system. <br>
-            </div>
+                We're glad to see you back on our system. <br>                      
+        </div> 
+        <div class="row mb-5">
+          <div class="col-sm-5">
             <ul class="list-group list-group-flush">
-              <li class="list-group-item"><b>name: </b>`+account_name+`</li>
-              <li class="list-group-item"><b>wallet address: </b>`+App.account+`</li>
-              <li class="list-group-item"><b>role: </b>`+role+`</li>
+              <li class="list-group-item"><b>Wallet address: </b>`+App.account+`</li>
+              <li class="list-group-item"><b>Role: </b>`+role+`</li>
             </ul>
           </div>
-        </div>
+        </div> 
+
         <div class="row">
-          <p>--------------------------------------------------------------------------------------------------</p>
+          <h6 class="display-6">Notifications</h6>
         </div>
-        <div class="row">
-          <p>---<b> notifications </b>------------------------------------------------------------------------------</p>
-        </div>
-        <div class="row">
-          `+html_notification+`
-        </div>
-        <div class="row">
-          <p>--------------------------------------------------------------------------------------------------</p>
-        </div>
-        <div class="row">
-          <p>---<b> last updated certificates </b>------------------------------------------------------------------------------</p>
-        </div>
-        <div class="row">
-          `+html_lastCertificates+`
-        </div>
-        <div class="row">
-          <p>--------------------------------------------------------------------------------------------------</p>
-        </div>
-        <div class="row">
-          <p>---<b> ask for support </b>------------------------------------------------------------------------------</p>
-        </div>
-        <div class="row">
-          <div class="card" style="width: 50rem;">
-            <div class="card-body">
-              <h5 class="card-title">Contact us</h5>
-              <p class="card-text">
-                Please, refer to the following references to contact us. We are eager to hear your requests!
-            </div>
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@studenti.unitn.it</li>
-              <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@studenti.unitn.it</li>
-              <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@studenti.unitn.it</li>
-            </ul>
+        <div class="row  mb-5">
+          <div class="col-sm-6">
+            `+html_notification+`
           </div>
         </div>
+
         <div class="row">
-          <p>--------------------------------------------------------------------------------------------------</p>
+          <h6 class="display-6">Last updated certificates</h6>
         </div>
+        <div class="row mb-5">
+          <div class="col-sm-6">
+            `+html_lastCertificates+`
+          </div>
+        </div>
+
+        <div class="row">
+          <h6 class="display-6">Ask for support</h6>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Contact us</h5>
+                <p class="card-text">
+                  Please, refer to the following references to contact us. We are eager to hear your requests!
+              </div>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@studenti.unitn.it</li>
+                <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@studenti.unitn.it</li>
+                <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@studenti.unitn.it</li>
+              </ul>
+            </div>            
+          </div>
+        </div>
+        
       </div>
       `;
 
