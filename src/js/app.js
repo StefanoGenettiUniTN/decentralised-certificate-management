@@ -830,7 +830,9 @@ App = {
           </div>
 
           <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
-        
+
+          <div class="alert alert-warning" id="result-errorMsg" style="visibility: hidden;">
+          </div>       
 
         <hr>
         <h6 class="display-6 mt-5">Current members</h6>
@@ -902,7 +904,8 @@ App = {
                                     \xa0\xa0<span> | </span> \xa0\xa0   
                                     <span>`+areas[user_area-1]["name"]+`</span>                                                                   
                                     \xa0\xa0<span> | </span> \xa0\xa0   
-                                
+                                    <span>`+user_name+`</span>  
+                                    <span>`+user_surname+`</span>\xa0\xa0
                                     `;
                 
                 if(user_id != App.blockchainid) {
@@ -1131,9 +1134,11 @@ App = {
                 if(data.status == 201) {
                   App.displayTeam();
                 } else if(data.status == 409) {
-                  document.getElementById("errorMsg").innerHTML = "Something went wrong. User already inserted";
+                  document.getElementById("result-errorMsg").style.visibility = "visible"; 
+                  document.getElementById("result-errorMsg").innerHTML = "Something went wrong. User already inserted";
                 } else {
-                  document.getElementById("errorMsg").innerHTML = "Something went wrong. Missing required information";
+                  document.getElementById("result-errorMsg").style.visibility = "visible"; 
+                  document.getElementById("result-errorMsg").innerHTML = "Something went wrong. Missing required information";
                 }
               })
             }catch(err){
