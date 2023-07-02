@@ -181,13 +181,66 @@ All the following commands must be executed in the root folder of the repository
 
 #### Use the Dapp
 1. Connect with Metamask
+   
+![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/f023dfcd-4f45-416d-a296-725e207fc137)
 
 
+After the login, you will be able to use the application.
+At its first execution, if there is no team leader registered in the database or the blockchain, the Dapp will prompt you to sign up as the team leader.
+
+![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/10653b42-883f-40b8-bebd-b6ae9e081318)
+
+Once a team leader has been selected, the following pages and functionalities are available to be used.
 The Dapp is divided into 5 main sections:
- - **Profile:** Shows all the information about the user.
- - **My Certificates:** Displays all the certificates owned by the user, along with their respective details.
- - **Upload a certificate:** Contains a form that enables users to upload a certificate.
- - **Team:** This section is restricted to leaders and the secretary, granting them the ability to add a member to the team and assign them to a specific area.
- - **Courses:** Shows a comprehensive list of courses available for team members to enroll in
+
+
+- #### Profile:
+Shows all the information about the user.
+
+<kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/bce89201-7ca1-4dba-bee4-16fc3e502285) </kbd>
+
+Along with two notification sections, one displaying the certificates which are no more valid
+
+<kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/9d911f90-4e66-4703-beda-8aac4d934383) </kbd>
+
+and the other displaying all the recently uploaded certificates
+
+<kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/8018c50f-746b-4254-85eb-3edbb20586f0) </kbd>
+
+
+ - #### My Certificates
+Displays all the certificates owned by the user, along with their respective details.
+
+<kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/6938867c-0154-49a3-b94d-a78a5e91c7d2) </kbd>
+
+
+ - #### Upload a certificate:
+Contains a form that allows users to upload a certificate.
+
+<kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/bcabb48d-04b0-434c-b3c2-521f74e54a6a) </kbd>
+
+
+ - #### Team:
+This section is restricted to leaders and secretaries, granting them the ability to add a member to the team and assign them to a specific area.
+
+<kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/f3d569c7-95c3-4346-99c4-bb087a11529b) </kbd>
+
+They can also view and manage the members of the team
+
+<kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/e8563b86-aaff-4c32-9e43-a9070942beda) </kbd>
+
+ - #### Courses:
+ Shows a comprehensive list of courses available for team members to enrol in
+ 
+ <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/60bca17d-b3da-4673-ab5c-cdeb5d6d1d53) </kbd>
+
+ And a list of the courses to which the user is already subscribed
+
+ <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/9246e2c5-2ca8-433f-b6f0-29ad3d2c48ac) </kbd>
+
+The leaders and secretaries can also access the edit course area, in which they can add or remove users from each course, and create certificates for them
+
+ <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/5f875958-a669-416a-9075-360f4530b338) </kbd>
+
    
 
