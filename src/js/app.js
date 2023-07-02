@@ -223,17 +223,17 @@ App = {
 
       App.contracts.Certificate.deployed().then(function(instance){
         certificateInstance = instance;       
-        if(user_address==undefined){ 
+        if(user_address==undefined || user_address == "undefined"){ 
           return certificateInstance.getTokensOwnedByMe({from: App.account});
         } else {
           return certificateInstance.getTokensOwnedByUser(user_address, {from: App.account});
         }
       }).then(async function(result){
         console.log(result);
-        if(user_address!=undefined){
+        if(user_address!=undefined && user_address!="undefined"){
           data_user = await App.getUserInfo(blockchain_id);
         }
-        mainContent.innerHTML = (user_address==undefined) ? `
+        mainContent.innerHTML = (user_address==undefined || user_address == "undefined") ? `
           <div id="certificateList" class='row row-cols-1 row-cols-md-4'></div>
         ` : `
           <h2 class="display-4">Certificates</h2>
@@ -281,8 +281,8 @@ App = {
 
             let date_expiration_html = (date_expiration=='undefined') ? '' : `<li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>`;
             let delete_btn = `<button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>`;
-            let validity_btn = (cert_valid) ? `<button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`')">Invalidate</button>` : 
-                                              `<button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`')">Set valid</button>`;
+            let validity_btn = (cert_valid) ? `<button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`', '`+blockchain_id+`')">Invalidate</button>` : 
+                                              `<button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`', '`+blockchain_id+`')">Set valid</button>`;
             let validity_html = (cert_valid) ? `<li class="list-group-item list-group-item-success"><b>validity: </b>`+cert_valid+`</li>` : 
                                                `<li class="list-group-item list-group-item-danger"><b>validity: </b>`+cert_valid+`</li>`;
             let image_link = "images/";
@@ -307,7 +307,7 @@ App = {
                 break;
             }
                
-            if(user_address==undefined){ 
+            if(user_address==undefined || user_address=="undefined"){ 
               $("#certificateList").append(`
                 <div class="col-mb-3 p-3">
                   <div class="card mt-3" style="height: 45rem; overflow-y: auto;">
@@ -1141,6 +1141,7 @@ App = {
                   document.getElementById("result-errorMsg").innerHTML = "Something went wrong. Missing required information";
                 }
               })
+              App.hideSpinner();
             }catch(err){
               console.log("error:")
               console.log(err);
@@ -1148,8 +1149,7 @@ App = {
           }).catch(function(err){
             console.log("error:")
             console.log(err.message);
-          });
-          App.hideSpinner();
+          });     
       }
     }
 
@@ -1449,7 +1449,6 @@ getUnsubscribedUsers: function(course_id){
 
 // remove course partecipant
 courseRemovePartecipant: async function(course_id, blockchain_id, page=undefined){
-  App.showSpinner();
   if(App.account){
     // Update the members subscribed to the course
     await App.courseUnsubscribe(course_id, blockchain_id)
@@ -1464,12 +1463,10 @@ courseRemovePartecipant: async function(course_id, blockchain_id, page=undefined
   }else{
     App.displayConnectMetamask();
   }
-  App.hideSpinner();
 }, 
 
 // add course partecipant
 courseAddPartecipant: async function(course_id, blockchain_id, page=undefined){
-  App.showSpinner();
   if(App.account){
     // Update the members subscribed to the course
     await App.courseSubscribe(course_id, blockchain_id)
@@ -1482,7 +1479,6 @@ courseAddPartecipant: async function(course_id, blockchain_id, page=undefined){
   }else{
     App.displayConnectMetamask();
   }
-  App.hideSpinner();
 }, 
 //...
 
