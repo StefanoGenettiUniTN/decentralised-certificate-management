@@ -76,7 +76,6 @@ async function uploadJson(fileCID, name, description, category, date_achievement
       "description": description,
       "document": gateway + fileCID,
       "category": category,
-      "validity": "true",
       "date_achievement": date_achievement,
       "date_expiration": date_expiration,
       "issuing_authority": issuing_authority

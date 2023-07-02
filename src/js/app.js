@@ -223,23 +223,24 @@ App = {
 
       App.contracts.Certificate.deployed().then(function(instance){
         certificateInstance = instance;       
-        if(user_address==undefined){ 
+        if(user_address==undefined || user_address == "undefined"){ 
           return certificateInstance.getTokensOwnedByMe({from: App.account});
         } else {
           return certificateInstance.getTokensOwnedByUser(user_address, {from: App.account});
         }
       }).then(async function(result){
         console.log(result);
-        if(user_address!=undefined){
+        if(user_address!=undefined && user_address != "undefined"){
           data_user = await App.getUserInfo(blockchain_id);
         }
-        mainContent.innerHTML = (user_address==undefined) ? `
-          <div id="certificateList" class='row row-cols-1 row-cols-md-4'></div>
+        mainContent.innerHTML = (user_address==undefined || user_address == "undefined") ? `
+          <br>
+          <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
         ` : `
           <h2 class="display-4">Certificates</h2>
           <p class="lead">Certificates of user <strong>${data_user["name"]} ${data_user["surname"]}</strong></p>
           <button id='back' class='btn btn-link' onclick="App.displayTeam();">Go back to team member list</button>
-          <div id="certificateList" class='row row-cols-1 row-cols-md-4'></div>
+          <div id="certificateList" class='row row-cols-1 row-cols-md-3'></div>
         ` 
         
         let token_id;
@@ -281,8 +282,8 @@ App = {
 
             let date_expiration_html = (date_expiration=='undefined') ? '' : `<li class="list-group-item"><b>expiration date: </b>`+date_expiration+`</li>`;
             let delete_btn = `<button class="btn btn-danger" onclick="App.deleteNFT('`+token_id+`')">Delete</button>`;
-            let validity_btn = (cert_valid) ? `<button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`')">Invalidate</button>` : 
-                                              `<button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`')">Set valid</button>`;
+            let validity_btn = (cert_valid) ? `<button class="btn btn-warning" onclick="App.invalidateNFT('`+token_id+`', '`+user_address+`', '`+blockchain_id+`')">Invalidate</button>` : 
+                                              `<button class="btn btn-warning" onclick="App.validateNFT('`+token_id+`', '`+user_address+`', '`+blockchain_id+`')">Set valid</button>`;
             let validity_html = (cert_valid) ? `<li class="list-group-item list-group-item-success"><b>validity: </b>`+cert_valid+`</li>` : 
                                                `<li class="list-group-item list-group-item-danger"><b>validity: </b>`+cert_valid+`</li>`;
             let image_link = "images/";
@@ -307,35 +308,11 @@ App = {
                 break;
             }
                
-            if(user_address==undefined){ 
+            if(user_address==undefined || user_address == "undefined"){ 
               $("#certificateList").append(`
-                <div class="col-mb-3 p-3">
-                  <div class="card mt-3" style="height: 45rem; overflow-y: auto;">
-                    <img src=`+image_link+` class="card-img-top mx-auto mt-3" style="width: 60%;">
-                    <div class="card-body">
-                    <h5 class="card-title display-5">`+name+`</h5>
-                    <hr>
-                    <p class="card-text">`+description+`</p>
-                    </div>
-                    <ul class="list-group list-group-flush">
-                      <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
-                      `+date_expiration_html+`
-                      <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
-                      <li class="list-group-item"><b>category: </b>`+category+`</li>
-                      `+validity_html+`
-                    </ul>
-                    <div class="card-footer" id="cert-card-` + token_id + `">
-                      <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
-                      `+ delete_btn + `
-                    </div>
-                  </div>
-                </div>
-                `);
-            } else {
-              $("#certificateList").append(`
-                <div class="col-mb-3 p-3">
-                  <div class="card mt-3" style="height: 45rem; overflow-y: auto;">
-                    <img src=`+image_link+` class="card-img-top mx-auto mt-3" style="width: 60%;">
+                <div class="col-mb-4">
+                  <div class="card mt-3" style="width: 30rem; height: 50rem; overflow-y: auto;">
+                    <img src=`+image_link+` class="card-img-top">
                     <div class="card-body">
                     <h5 class="card-title">`+name+`</h5>
                     <p class="card-text">`+description+`</p>
@@ -347,7 +324,30 @@ App = {
                       <li class="list-group-item"><b>category: </b>`+category+`</li>
                       `+validity_html+`
                     </ul>
-                    <div class="card-footer" id="cert-card-` + token_id + `">
+                    <div class="card-body" id="cert-card-` + token_id + `">
+                      <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
+                      `+ delete_btn + `
+                    </div>
+                  </div>
+                </div>
+                `);
+            } else {
+              $("#certificateList").append(`
+                <div class="col-mb-4">
+                  <div class="card mt-3" style="width: 30rem; height: 50rem; overflow-y: auto;">
+                    <img src=`+image_link+` class="card-img-top">
+                    <div class="card-body">
+                    <h5 class="card-title">`+name+`</h5>
+                    <p class="card-text">`+description+`</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item"><b>achievement date: </b>`+date_achievement+`</li>
+                      `+date_expiration_html+`
+                      <li class="list-group-item"><b>issuing authority: </b>`+issuing_authority+`</li>
+                      <li class="list-group-item"><b>category: </b>`+category+`</li>
+                      `+validity_html+`
+                    </ul>
+                    <div class="card-body" id="cert-card-` + token_id + `">
                       <a href="`+document+`" class="btn btn-info" target="_blank">Download</a>
                     </div>
                   </div>
@@ -595,28 +595,19 @@ App = {
         html_notification += `<p>Hurray! All your certificates are valid.</p>`;
       }else{
         html_notification += `<p>The following certificates owned by you are expired or not valid:</p>`;
-        html_notification += `<div class="overflow-auto p-5" style="height: 500px; border: 2px solid #f8f9fa!important;/* border-style: outset;">`;
+        html_notification += `<div class="overflow-auto" style="height: 500px; width: 55rem;">`;
         for(i in expiredCertificates){
           cert_obj = expiredCertificates[i];
-
-          // Show expiration date only if different from undefined
-          html_expiration_date = "";
-          console.log(typeof cert_obj.date_expiration)
-          if(cert_obj.date_expiration != "undefined") {
-            console.log("cio")
-            html_expiration_date = `<li class="list-group-item"><b>expiration date: </b>`+cert_obj.date_expiration+`</li>`
-          }
-
           html_notification += `
-                <div class="card border-danger mx-auto mb-5">
-                  <img src="images/defaultCertificateIcon.png" class="card-img-top mx-auto p-2" style="width: 40%">
+                <div class="card mb-2" style="width: 50rem;">
+                  <img src="images/defaultCertificateIcon.png" class="card-img-top" style="width: 33%">
                   <div class="card-body">
                   <h5 class="card-title">`+cert_obj.name+`</h5>
                   <p class="card-text">`+cert_obj.description+`</p>
                   </div>
                   <ul class="list-group list-group-flush">
                     <li class="list-group-item"><b>achievement date: </b>`+cert_obj.date_achievement+`</li>
-                    `+html_expiration_date+`
+                    <li class="list-group-item"><b>expiration date: </b>`+cert_obj.date_expiration+`</li>
                     <li class="list-group-item"><b>issuing authority: </b>`+cert_obj.issuing_authority+`</li>
                     <li class="list-group-item"><b>category: </b>`+cert_obj.category+`</li>
                   </ul>
@@ -636,7 +627,7 @@ App = {
         html_lastCertificates += `<p>You have not uploaded any certificate yet.</p>`;
       }else{
         html_lastCertificates += `<p>The following are the last certificates you have uploaded:</p>`;
-        html_lastCertificates += `<div class="overflow-auto p-5" style="height: 500px; border: 2px solid #f8f9fa!important;/* border-style: outset;">`;
+        html_lastCertificates += `<div class="overflow-auto" style="height: 500px; width: 55rem;">`;
 
         mostRecentCertificates.sort(function(a, b) {  // sort certificates by date of achievement
           return b.date_creation - a.date_creation;
@@ -655,24 +646,16 @@ App = {
               cert_obj.issuing_authority = result.issuing_authority;          
             }).fail(function() { alert('getJSON request failed! '); }); //TODO: prepare more meaningful error handling
           }
-
-          // Show expiration date only if different from undefined
-          html_expiration_date = "";
-          if(cert_obj.date_expiration != "undefined") {
-            html_expiration_date = `<li class="list-group-item"><b>expiration date: </b>`+cert_obj.date_expiration+`</li>`
-          }
-            
-
           html_lastCertificates += `
-                <div class="card mx-auto mb-5">
-                  <img src="images/defaultCertificateIcon.png" class="card-img-top mx-auto p-2" style="width: 40%">
+                <div class="card mb-2" style="width: 50rem;">
+                  <img src="images/defaultCertificateIcon.png" class="card-img-top" style="width: 33%">
                   <div class="card-body">
                   <h5 class="card-title">`+cert_obj.name+`</h5>
                   <p class="card-text">`+cert_obj.description+`</p>
                   </div>
                   <ul class="list-group list-group-flush">
                     <li class="list-group-item"><b>achievement date: </b>`+cert_obj.date_achievement+`</li>
-                    `+html_expiration_date+`
+                    <li class="list-group-item"><b>expiration date: </b>`+cert_obj.date_expiration+`</li>
                     <li class="list-group-item"><b>issuing authority: </b>`+cert_obj.issuing_authority+`</li>
                     <li class="list-group-item"><b>category: </b>`+cert_obj.category+`</li>
                   </ul>
@@ -693,58 +676,64 @@ App = {
       // display profile card
       mainContent.innerHTML = `
       <div class="container-fluid">
-        <div class="row mb-3">          
-              <h5 class="display-5">Welcome back, <strong>`+account_name+`</strong></h5>
+        <div class="row">
+          <p>---<b> profile section </b>------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          <div class="card" style="width: 50rem;">
+            <div class="card-body">
+              <h5 class="card-title">Welcome back!</h5>
               <p class="card-text">
-                We're glad to see you back on our system. <br>                      
-        </div> 
-        <div class="row mb-5">
-          <div class="col-sm-5">
+                We're glad to see you back on our system. <br>
+            </div>
             <ul class="list-group list-group-flush">
-              <li class="list-group-item"><b>Wallet address: </b>`+App.account+`</li>
-              <li class="list-group-item"><b>Role: </b>`+role+`</li>
+              <li class="list-group-item"><b>name: </b>`+account_name+`</li>
+              <li class="list-group-item"><b>wallet address: </b>`+App.account+`</li>
+              <li class="list-group-item"><b>role: </b>`+role+`</li>
             </ul>
           </div>
-        </div> 
-
-        <div class="row">
-          <h6 class="display-6">Notifications</h6>
         </div>
-        <div class="row  mb-5">
-          <div class="col-sm-6">
-            `+html_notification+`
+        <div class="row">
+          <p>--------------------------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          <p>---<b> notifications </b>------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          `+html_notification+`
+        </div>
+        <div class="row">
+          <p>--------------------------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          <p>---<b> last updated certificates </b>------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          `+html_lastCertificates+`
+        </div>
+        <div class="row">
+          <p>--------------------------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          <p>---<b> ask for support </b>------------------------------------------------------------------------------</p>
+        </div>
+        <div class="row">
+          <div class="card" style="width: 50rem;">
+            <div class="card-body">
+              <h5 class="card-title">Contact us</h5>
+              <p class="card-text">
+                Please, refer to the following references to contact us. We are eager to hear your requests!
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@studenti.unitn.it</li>
+              <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@studenti.unitn.it</li>
+              <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@studenti.unitn.it</li>
+            </ul>
           </div>
         </div>
-
         <div class="row">
-          <h6 class="display-6">Last updated certificates</h6>
+          <p>--------------------------------------------------------------------------------------------------</p>
         </div>
-        <div class="row mb-5">
-          <div class="col-sm-6">
-            `+html_lastCertificates+`
-          </div>
-        </div>
-
-        <div class="row">
-          <h6 class="display-6">Ask for support</h6>
-        </div>
-        <div class="row">
-          <div class="col-sm-6">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Contact us</h5>
-                <p class="card-text">
-                  Please, refer to the following references to contact us. We are eager to hear your requests!
-              </div>
-              <ul class="list-group list-group-flush">
-                <li class="list-group-item"><b>eros ribaga: </b>eros.ribaga@studenti.unitn.it</li>
-                <li class="list-group-item"><b>stefano genetti: </b>stefano.genetti@studenti.unitn.it</li>
-                <li class="list-group-item"><b>pietro fronza: </b>pietro.fronza@studenti.unitn.it</li>
-              </ul>
-            </div>            
-          </div>
-        </div>
-        
       </div>
       `;
 
@@ -785,61 +774,36 @@ App = {
         `;
       } else {
         mainContent.innerHTML = `
-        <h6 class="display-6">Add a team member</h6>
-        <hr class="my-4">
-
-        <div class="col-sm-6">
-
-          <!-- Wallet address --!>
-          <div class="input-group mb-3">
-            <span class="input-group-text">Wallet address</span>
-            <input type="text" class='form-control add-form' id="memberAddress" name="memberAddress" required>
-          </div>
-
-          <!-- Name and surname --!>
-          <div class='row'> 
-            <div class='col'>
-              <div class="input-group mb-3">
-                <span class="input-group-text">Name</span>
-                <input type="text" class='form-control add-form' id="memberName" name="memberName" required>
+          <div class='form-row'>
+            <div class='form-group col-md-6'>
+              <label for="memberAddress">Add team member</label><br>
+              <input type="text" class='form-control add-form' id="memberAddress" name="memberAddress" required><br>
+              <div class='row'> 
+                <div class='col'>
+                  <label for="memberName">Add team member name</label><br>
+                  <input type="text" class='form-control add-form' id="memberName" name="memberName" required><br>
+                </div>
+                <div class='col'>
+                  <label for="memberSurname">Add team member surname</label><br>
+                  <input type="text" class='form-control add-form' id="memberSurname" name="memberSurname" required><br>
+                </div>
               </div>
+              <label for="memberRole">What is its role?</label><br>
+              <select id="memberRole" class='form-control add-form' required>
+                <option value="1">Team leader</option>
+                <option value="2">Leader</option>
+                <option value="3">Secretary</option>
+                <option value="4">Standard</option>
+              </select><br>
+              <label for="memberArea">What is its area?</label><br>
+              <select id="memberArea" class='form-control add-form' required></select><br>
+              <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
             </div>
-            <div class='col'>
-              <div class="input-group mb-3">
-                <span class="input-group-text">Surname</span>
-                <input type="text" class='form-control add-form' id="memberSurname" name="memberSurname" required>
-              </div>
-            </div>
           </div>
-
-          <!-- Role select--!>
-          <div class="input-group mb-3">
-            <span class="input-group-text">What is its role?</span>
-            <select id="memberRole" class='form-control add-form' required>
-              <option value="1">Team leader</option>
-              <option value="2">Leader</option>
-              <option value="3">Secretary</option>
-              <option value="4">Standard</option>
-            </select>
+          <hr>
+          <div class='form-row'>
+            <div id="teamList" class='list-group list-group-flush'></div>
           </div>
-
-          <!-- Area select--!>
-          <div class="input-group mb-3">
-            <span class="input-group-text">What is its role?</span>
-            <select id="memberArea" class='form-control add-form' required></select><br>
-          </div>
-
-          <button onclick="App.addTeamMember()" class='btn btn-primary mb-2'>Add</button>
-
-          <div class="alert alert-warning" id="result-errorMsg" style="visibility: hidden;">
-          </div>       
-
-        <hr>
-        <h6 class="display-6 mt-5">Current members</h6>
-        <hr>
-        <div class='form-row'>          
-          <div id="teamList" class='list-group list-group-flush'></div>
-        </div>
         `;
           
         // Save areas to display them for each member
@@ -897,26 +861,19 @@ App = {
                     icon = '<span class="material-symbols-outlined">account_circle</span>'; 
                     break;
                 }
-
-                var memberDiv = `<div class='list-group-item list-group-item-action py-3' id="`+members[teamMember]+`"> ` 
-                                  + icon + 
-                                  ` <span id='address'>`+members[teamMember]+`</span>
-                                    \xa0\xa0<span> | </span> \xa0\xa0   
-                                    <span>`+areas[user_area-1]["name"]+`</span>                                                                   
-                                    \xa0\xa0<span> | </span> \xa0\xa0   
-                                    <span>`+user_name+`</span>  
-                                    <span>`+user_surname+`</span>\xa0\xa0
-                                    `;
-                
-                if(user_id != App.blockchainid) {
-                  memberDiv += `<button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>
-                                    Show certificates
-                                  </button>
-                                </div>`
-                }
                
-                document.getElementById("teamList").innerHTML += memberDiv
-                                                                  
+                document.getElementById("teamList").innerHTML += `<div class='list-group-item list-group-item-action'> ` 
+                                                                  + icon + 
+                                                                  ` <span id='address'>`+members[teamMember]+`</span>
+                                                                    \xa0\xa0<span> | </span> \xa0\xa0   
+                                                                    <span>`+areas[user_area-1]["name"]+`</span>                                                                   
+                                                                    \xa0\xa0<span> | </span> \xa0\xa0   
+                                                                    <span>`+user_name+`</span>  
+                                                                    <span>`+user_surname+`</span>\xa0\xa0
+                                                                    <button class='btn btn-primary' onclick='App.displayCertificates("`+members[teamMember]+`",`+user_id+`);'>
+                                                                      Show certificates
+                                                                    </button>
+                                                                  </div><br>`;                      
               }              
             }            
           })        
@@ -1134,13 +1091,12 @@ App = {
                 if(data.status == 201) {
                   App.displayTeam();
                 } else if(data.status == 409) {
-                  document.getElementById("result-errorMsg").style.visibility = "visible"; 
-                  document.getElementById("result-errorMsg").innerHTML = "Something went wrong. User already inserted";
+                  document.getElementById("errorMsg").innerHTML = "Something went wrong. User already inserted";
                 } else {
-                  document.getElementById("result-errorMsg").style.visibility = "visible"; 
-                  document.getElementById("result-errorMsg").innerHTML = "Something went wrong. Missing required information";
+                  document.getElementById("errorMsg").innerHTML = "Something went wrong. Missing required information";
                 }
               })
+              App.hideSpinner();
             }catch(err){
               console.log("error:")
               console.log(err);
@@ -1149,7 +1105,7 @@ App = {
             console.log("error:")
             console.log(err.message);
           });
-          App.hideSpinner();
+          
       }
     }
 
@@ -1585,7 +1541,7 @@ displayUploadCertificateForm: async function(owner=undefined, from=undefined){
   if(App.account){
     mainContent.innerHTML = `
     <div class="jumbotron">
-      <h6 class="display-6">Upload certificate</h6>
+      <h2 class="display-4">Upload certificate</h2>
       <span id="upload-certificate-form-goback"></span>
       <hr class="my-4">
     </div>
