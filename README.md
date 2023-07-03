@@ -33,7 +33,7 @@ The **E-agle smart contract** manages the roles of the users.
 Consists only of an **express** server which is used to interact with Pinata and MongoDB.
 
 <p align="center">
-  <img alt="Architecture" height="800" src="https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/ef9e02b5-64bf-44c9-8a44-6ca99d470c1d">
+  <img alt="Architecture" height="800" src="https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/f3649cc4-02b0-4d6e-bf2c-58306f0a04c4">
 <p />
 
 # 🛰 Repository structure
