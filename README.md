@@ -191,25 +191,25 @@ At its first execution, if there is no team leader registered in the database or
 ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/10653b42-883f-40b8-bebd-b6ae9e081318)
 
 Once a team leader has been selected, the following pages and functionalities are available to be used.
-The Dapp is divided into 5 main sections:
 
+The Dapp is divided into 5 main sections:
 
 - #### Profile:
 Shows all the information about the user.
 
 <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/bce89201-7ca1-4dba-bee4-16fc3e502285) </kbd>
 
-Along with two notification sections, one displaying the certificates which are no more valid
+Along with two notification sections, one displaying the certificates which are not valid anymore
 
 <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/9d911f90-4e66-4703-beda-8aac4d934383) </kbd>
 
-and the other displaying all the recently uploaded certificates
+and the other displaying all the recently uploaded certificates.
 
 <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/8018c50f-746b-4254-85eb-3edbb20586f0) </kbd>
 
 
  - #### My Certificates
-Displays all the certificates owned by the user, along with their respective details.
+Displays all the certificates the user owns, along with their respective details.
 
 <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/6938867c-0154-49a3-b94d-a78a5e91c7d2) </kbd>
 
@@ -217,30 +217,29 @@ Displays all the certificates owned by the user, along with their respective det
  - #### Upload a certificate:
 Contains a form that allows users to upload a certificate.
 
-<kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/bcabb48d-04b0-434c-b3c2-521f74e54a6a) </kbd>
-
+<kbd> ![UploadCertificates](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/4cd024e5-7836-4fc4-aa3e-2dcce90d6393) </kbd>
 
  - #### Team:
 This section is restricted to leaders and secretaries, granting them the ability to add a member to the team and assign them to a specific area.
+They can also view and manage the members of the team.
 
-<kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/f3d569c7-95c3-4346-99c4-bb087a11529b) </kbd>
+<kbd> ![AddTeamMember](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/8edc01e5-5df5-4d12-a74b-44c240fe52dd)  </kbd>
 
-They can also view and manage the members of the team
+The leaders can also view the certificates owned by a specific team member.
 
-<kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/e8563b86-aaff-4c32-9e43-a9070942beda) </kbd>
+![UserCertificate (1)](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/97077788-080d-4d66-a227-5734ed872b05)
 
  - #### Courses:
- Shows a comprehensive list of courses available for team members to enrol in
+ Shows a comprehensive list of courses available for team members to enrol in. 
+ Each user is able to subscribe or unsubscribe to a course.
 
- <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/60bca17d-b3da-4673-ab5c-cdeb5d6d1d53) </kbd>
+ <kbd> ![CourseSubAndUnsub](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/a774f325-25dd-4bc3-9f84-4f42b5874d1a) </kbd>
 
- And a list of the courses to which the user is already subscribed
-
- <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/9246e2c5-2ca8-433f-b6f0-29ad3d2c48ac) </kbd>
-
-The leaders and secretaries can also access the edit course area, in which they can add or remove users from each course, and create certificates for them
+The leaders and secretaries can also access the edit course area, in which they can add or remove users from each course.
 
  <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/5f875958-a669-416a-9075-360f4530b338) </kbd>
 
+This section also allows you to easily create a certificate for each member subscribed to the course.
    
-![AddTeamMember](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/8edc01e5-5df5-4d12-a74b-44c240fe52dd)
+ <kbd> ![CourseCertificationPublication](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/d0ad39c9-ee9d-4033-bd79-e962f8ab5258) </kbd>
+
