@@ -231,7 +231,7 @@ They can also view and manage the members of the team
 
  - #### Courses:
  Shows a comprehensive list of courses available for team members to enrol in
- 
+
  <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/60bca17d-b3da-4673-ab5c-cdeb5d6d1d53) </kbd>
 
  And a list of the courses to which the user is already subscribed
@@ -243,4 +243,4 @@ The leaders and secretaries can also access the edit course area, in which they 
  <kbd> ![image](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/5f875958-a669-416a-9075-360f4530b338) </kbd>
 
    
-
+![AddTeamMember](https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/8edc01e5-5df5-4d12-a74b-44c240fe52dd)
