@@ -25,12 +25,12 @@ This part consists in:
 - E-agle smart contract
 - IPFS
 
-The **certificate smart contract** manages the certificates, represented as NFTs, uploaded/minted by the users or the leader.
-The **E-agle smart contract** manages the roles of the users.
-**IPFS** is used to store the PDFs of the certificates and the metadata describing it. The files are pinned using Pinata.
+The **Certificate.sol smart contract** manages the certificates, represented as NFTs, uploaded/minted by the users.
+The **Eagle.sol smart contract** manages the roles of the users.
+**IPFS** is used to store the PDFs of the certificates and the metadata describing it. The files are pinned using [Pinata](https://www.pinata.cloud/).
 
 #### Web service
-Consists only of an **express** server which is used to interact with Pinata and MongoDB.
+Consists only of an [Express](https://expressjs.com/) server which is used to interact with Pinata and [MongoDB](https://www.mongodb.com/).
 
 <p align="center">
   <img alt="Architecture" height="800" src="https://github.com/StefanoGenettiUniTN/decentralised-certificate-management/assets/29599452/f3649cc4-02b0-4d6e-bf2c-58306f0a04c4">
@@ -60,7 +60,7 @@ From this branch, other branches are created to experiment with specific functio
     ├── src                   
     │   ├── css         
     │   ├── js        
-    │   │   ├── app.js               # Contains all the code that makes the Dapp woork
+    │   │   ├── app.js               # Contains all the code that makes the Dapp work
     │   └── index.html               # Initial html template
     └── ...
 ```
@@ -71,7 +71,7 @@ From this branch, other branches are created to experiment with specific functio
     ├── .env.example                  # .env file example
     ├── index.js                      # Initialize the web service
     ├── server.js                     # Web service configurations
-    ├── truffle-config.js             # Contains teh configuration of truffle 
+    ├── truffle-config.js             # Contains teh configuration of Truffle 
     └── ...                        
 ```
 
