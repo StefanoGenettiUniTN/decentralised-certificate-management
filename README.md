@@ -17,7 +17,7 @@ This Dapp was built as a study project for the **Blockchain course** by:
 The objective of this project is to develop a **Dapp** that enhances the process of managing certificates for individuals belonging to a group, such as a team or a company. 
 To address this challenge, our approach involves implementing a system that combines distributed services, including a **private blockchain** and **IPFS** (InterPlanetary File System), along with a web service developed using **Express**. The latter enables us to interact with external products and enhance the overall certificate management process.
 
-**Note:** This repository contains the **minimum viable product** developed exclusively for the E-agle team of the University of Trento.
+**Note:** This repository contains the **minimum viable product** developed for the [E-Agle Trento Racing Team](https://eagletrt.it/) of the University of Trento.
 
 #### Distributed part
 This part consists in:
