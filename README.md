@@ -19,15 +19,20 @@ To address this challenge, our approach involves implementing a system that comb
 
 **Note:** This repository contains the **minimum viable product** developed for the [E-Agle Trento Racing Team](https://eagletrt.it/) of the University of Trento.
 
+**Branching strategy:** `Gitflow Workflow`<br>
+To facilitate collaboration in software product development, the Gitflow Workflow branching strategy has been adopted. The workflow utilizes two main branches: main (corresponding to Master in the diagram) and develop. The master branch hosts the history of official product software releases. The develop branch, on the other hand, is the one followed during the implementation process and from which branches corresponding to different features branch off.<br><br>
+![image](https://user-images.githubusercontent.com/57845191/169705872-d64585de-c826-4909-9564-a0521087e725.png)
+<br>
+
 #### Distributed part
 This part consists in:
-- Certificate smart contract
-- E-agle smart contract
+- Certificate.sol smart contract
+- Eagle.sol smart contract
 - IPFS
 
 The **Certificate.sol smart contract** manages the certificates, represented as NFTs, uploaded/minted by the users.
 The **Eagle.sol smart contract** manages the roles of the users.
-**IPFS** is used to store the PDFs of the certificates and the metadata describing it. The files are pinned using [Pinata](https://www.pinata.cloud/).
+**IPFS** is used to store the PDFs of the certificates and the metadata describing them. The files on the distributed file system are pinned using [Pinata](https://www.pinata.cloud/).
 
 #### Web service
 Consists only of an [Express](https://expressjs.com/) server which is used to interact with Pinata and [MongoDB](https://www.mongodb.com/).
