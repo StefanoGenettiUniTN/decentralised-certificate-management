@@ -38,7 +38,7 @@ contract Eagle {
 
     // when the smart contract of our customer is deployed
     // the address of the NFT smart contract is stored in
-    // attribute nftSmartContractAddress
+    // attribute nftSmartContractAddress (see migrations/1_deployment.js)
     function setCertificateAddress(address _certificateAddress) public {
         require(nftSmartContractAddress == address(0), "Certificate address already set");
         nftSmartContractAddress = _certificateAddress;
@@ -175,7 +175,6 @@ contract Eagle {
         require(userAddressToUserId[msg.sender]!=0, "you are not a team member");    // the user must be already added in the team
         return userAddressToArea[msg.sender];
     } 
-
 
     // Set the certificate of a team member not
     // valid
