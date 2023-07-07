@@ -42,10 +42,6 @@ Consists only of an [Express](https://expressjs.com/) server which is used to in
 <p />
 
 # 🛰 Repository structure
-#### branch: develop
-
-The purpose of this branch is to facilitate collaboration among the team members throughout the development process. For our solution's latest official and stable release, please refer to the `main` branch.
-From this branch, other branches are created to experiment with specific functionalities.
 
 #### Main folders
 ```
